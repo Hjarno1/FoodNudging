@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Food Nudging</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>Food Nudging App</h1>
+    
+    <!-- Section for Text Input -->
+    <div class="section">
+      <h2>Analyze Text</h2>
+      <form id="textForm" onsubmit="return handleTextSubmit(event);">
+        <label for="user_text">Enter Meal Description:</label><br>
+        <textarea id="user_text" name="user_text" rows="4" cols="50"
+          placeholder="E.g. A sandwich with white bread and mayo"></textarea><br><br>
+        <button type="submit">Analyze Text</button>
+      </form>
+      
+      <div id="textResult" class="result-box"></div>
+    </div>
+
+    <!-- Section for Image Upload -->
+    <div class="section">
+      <h2>Analyze Image</h2>
+      <form id="imageForm" onsubmit="return handleImageSubmit(event);" enctype="multipart/form-data">
+        <label for="meal_image">Upload Meal Image:</label><br>
+        <input type="file" id="meal_image" name="meal_image" accept="image/*"><br><br>
+        <button type="submit">Analyze Image</button>
+      </form>
+      
+      <div id="imageResult" class="result-box"></div>
+    </div>
+  </div>
+
+  <script>
+    // Handle text form submission via fetch API
+    async function handleTextSubmit(event) {
+      event.preventDefault(); // prevent form from reloading page
+
+      const textInput = document.getElementById("user_text").value;
+      const resultDiv = document.getElementById("textResult");
+      resultDiv.innerHTML = "Analyzing...";
+
+      try {
+        const response = await fetch("/analyze-text", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: `user_text=${encodeURIComponent(textInput)}`
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          resultDiv.innerHTML = "Error: " + (errorData.error || "Unknown error");
+          return;
+        }
+        
+        const data = await response.json();
+        resultDiv.innerHTML = `<strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
+                               <strong>Nudges:</strong> <ul>
+                               ${data.nudges.map(n => `<li>${n}</li>`).join("")}
+                               </ul>`;
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = "An error occurred.";
+      }
+      return false; // keep page from reloading
+    }
+
+    // Handle image form submission via fetch API
+    async function handleImageSubmit(event) {
+      event.preventDefault();
+
+      const fileInput = document.getElementById("meal_image");
+      const resultDiv = document.getElementById("imageResult");
+      resultDiv.innerHTML = "Analyzing...";
+
+      const formData = new FormData();
+      formData.append("meal_image", fileInput.files[0]);
+
+      try {
+        const response = await fetch("/analyze-image", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          resultDiv.innerHTML = "Error: " + (errorData.error || "Unknown error");
+          return;
+        }
+
+        const data = await response.json();
+        resultDiv.innerHTML = `<strong>Meal Name:</strong> ${data.meal_name}<br/>
+                               <strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
+                               <strong>Nudges:</strong> <ul>
+                               ${data.nudges.map(n => `<li>${n}</li>`).join("")}
+                               </ul>`;
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = "An error occurred.";
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>

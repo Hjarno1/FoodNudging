@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 
 # Local imports
@@ -7,70 +7,83 @@ from health_nudger.ingredient_detector import TextIngredientDetector
 from health_nudger.suggestion_engine import SuggestionEngine
 from health_nudger.image_meal_classifier import ImageMealClassifier
 
-app = Flask(__name__)
+app = Flask(__name__, )
 
-# Path to the CSV file with ingredient substitutions
-SUBSTITUTION_FILE = os.path.join(os.path.dirname(__file__), 'health_nudger', 'data', 'substitutions.csv')
+# Setup a folder for image uploads
+app.config['UPLOAD_FOLDER'] = 'uploads'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+
+
+# Initialize your text ingredient detector
+text_detector = TextIngredientDetector()
+
+# Initialize your suggestion engine
+SUBSTITUTION_FILE = os.path.join("health_nudger", "data", "substitutions.csv")
 suggestion_engine = SuggestionEngine(SUBSTITUTION_FILE)
 
-# Initialize detectors/classifiers
-text_detector = TextIngredientDetector()
+# Initialize your image classifier (either the mock or the real model)
 image_classifier = ImageMealClassifier()
 
-# Simple config for uploaded images
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
 @app.route('/', methods=['GET'])
-def home():
-    return "Welcome to the Food Nudging API!"
+def index():
+    """
+    Render a simple page with two forms:
+    1) For text analysis
+    2) For image upload
+    """
+    return render_template('index.html')
 
 @app.route('/analyze-text', methods=['POST'])
 def analyze_text():
     """
-    Endpoint that takes JSON with a "text" field,
-    identifies ingredients, and returns nudges.
+    Handle the text form submission
     """
-    data = request.get_json()
-    if not data or 'text' not in data:
-        return jsonify({'error': 'No text provided.'}), 400
+    user_text = request.form.get('user_text', '')
+    if not user_text.strip():
+        return jsonify({"error": "No text provided"}), 400
 
-    text = data['text']
-    # 1. Detect ingredients
-    ingredients = text_detector.detect_ingredients_from_text(text)
-    # 2. Generate nudges
+    # Detect ingredients in the text
+    ingredients = text_detector.detect_ingredients_from_text(user_text)
+    # Generate nudges
     nudges = suggestion_engine.generate_nudges(ingredients)
 
+    # Return JSON response or redirect back to the main page
+    # Here, let's just return JSON for simplicity. 
+    # If you want to display results in the HTML page, you can pass them to render_template.
     response = {
-        'detected_ingredients': ingredients,
-        'nudges': nudges
+        "detected_ingredients": ingredients,
+        "nudges": nudges
     }
     return jsonify(response), 200
-
 
 @app.route('/analyze-image', methods=['POST'])
 def analyze_image():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image file provided.'}), 400
+    """
+    Handle the image form submission
+    """
+    if 'meal_image' not in request.files:
+        return jsonify({"error": "No image file provided"}), 400
 
-    img_file = request.files['image']
-    filename = secure_filename(img_file.filename)
-    save_path = os.path.join(UPLOAD_FOLDER, filename)
-    img_file.save(save_path)
+    file = request.files['meal_image']
+    if file.filename == '':
+        return jsonify({"error": "Empty file name"}), 400
 
-    # This time we call our real classifier
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(save_path)
+
+    # Classify the meal
     meal_name, ingredients = image_classifier.classify_meal_from_image(save_path)
+    # Generate nudges
     nudges = suggestion_engine.generate_nudges(ingredients)
 
     response = {
-        'meal_name': meal_name,
-        'detected_ingredients': ingredients,
-        'nudges': nudges
+        "meal_name": meal_name,
+        "detected_ingredients": ingredients,
+        "nudges": nudges
     }
     return jsonify(response), 200
 
-
 if __name__ == '__main__':
-    # Run the Flask app
     app.run(debug=True, port=5000)
