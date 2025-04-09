@@ -1,0 +1,62 @@
+# Virtual Environment
+venv/
+env/
+.env/
+.venv/
+ENV/
+virtualenv/
+.Python
+pyvenv.cfg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Distribution / packaging
+dist/
+build/
+downloads/
+eggs/
+.eggs/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Model weights and data files (optional)
+*.pt
+*.pth
+*.h5
