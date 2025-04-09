@@ -36,24 +36,19 @@ def index():
 
 @app.route('/analyze-text', methods=['POST'])
 def analyze_text():
-    """
-    Handle the text form submission
-    """
     user_text = request.form.get('user_text', '')
     if not user_text.strip():
         return jsonify({"error": "No text provided"}), 400
 
-    # Detect ingredients in the text
-    ingredients = text_detector.detect_ingredients_from_text(user_text)
-    # Generate nudges
-    nudges = suggestion_engine.generate_nudges(ingredients)
-
-    # Return JSON response or redirect back to the main page
-    # Here, let's just return JSON for simplicity. 
-    # If you want to display results in the HTML page, you can pass them to render_template.
+    # Detect ingredients (both regular and healthy)
+    ingredients, healthy_ingredients = text_detector.detect_ingredients_from_text(user_text)
+    
+    # Generate comprehensive feedback
+    feedback = suggestion_engine.generate_feedback(ingredients, healthy_ingredients)
+    
     response = {
-        "detected_ingredients": ingredients,
-        "nudges": nudges
+        "analysis": feedback,
+        "meal_description": user_text
     }
     return jsonify(response), 200
 
