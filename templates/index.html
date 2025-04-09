@@ -2,47 +2,194 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Food Nudging</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriNudge - Healthy Eating Assistant</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="container">
-    <h1>Food Nudging App</h1>
+    <header class="app-header">
+      <div class="logo-container">
+        <i class="fas fa-carrot logo-icon"></i>
+        <h1>NutriNudge</h1>
+      </div>
+      <p class="tagline">Your personal healthy eating assistant</p>
+    </header>
+    
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchTab('text')">
+        <i class="fas fa-keyboard"></i> Text Analysis
+      </button>
+      <button class="tab-button" onclick="switchTab('image')">
+        <i class="fas fa-camera"></i> Image Analysis
+      </button>
+    </div>
     
     <!-- Section for Text Input -->
-    <div class="section">
-      <h2>Analyze Text</h2>
-      <form id="textForm" onsubmit="return handleTextSubmit(event);">
-        <label for="user_text">Enter Meal Description:</label><br>
-        <textarea id="user_text" name="user_text" rows="4" cols="50"
-          placeholder="E.g. A sandwich with white bread and mayo"></textarea><br><br>
-        <button type="submit">Analyze Text</button>
-      </form>
+    <div id="textSection" class="section active-section">
+      <div class="input-container">
+        <label for="user_text">Describe your meal:</label>
+        <textarea id="user_text" name="user_text" rows="5"
+          placeholder="E.g. A sandwich with white bread, mayo, and processed ham with a side of potato chips"></textarea>
+        <div class="example-text" onclick="insertExampleText()">
+          <i class="fas fa-lightbulb"></i> Example: "Grilled chicken salad with ranch dressing and croutons"
+        </div>
+        <button class="submit-button" type="button" onclick="handleTextSubmit(event)">
+          <i class="fas fa-search"></i> Analyze Meal
+        </button>
+      </div>
       
-      <div id="textResult" class="result-box"></div>
+      <div id="textResult" class="result-box hidden">
+        <div class="result-header">
+          <h3>Analysis Results</h3>
+          <div class="loader" id="textLoader"></div>
+        </div>
+        <div class="result-content" id="textResultContent"></div>
+      </div>
     </div>
 
     <!-- Section for Image Upload -->
-    <div class="section">
-      <h2>Analyze Image</h2>
-      <form id="imageForm" onsubmit="return handleImageSubmit(event);" enctype="multipart/form-data">
-        <label for="meal_image">Upload Meal Image:</label><br>
-        <input type="file" id="meal_image" name="meal_image" accept="image/*"><br><br>
-        <button type="submit">Analyze Image</button>
-      </form>
+    <div id="imageSection" class="section">
+      <div class="input-container">
+        <label for="meal_image">Upload a photo of your meal:</label>
+        <div class="upload-area" id="uploadArea">
+          <i class="fas fa-cloud-upload-alt upload-icon"></i>
+          <p>Drag & drop your image here or click to browse</p>
+          <input type="file" id="meal_image" name="meal_image" accept="image/*">
+        </div>
+        <div class="image-preview hidden" id="imagePreview">
+          <img id="previewImage" src="#" alt="Preview">
+          <button class="remove-image" onclick="removeImage()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <button class="submit-button" type="button" onclick="handleImageSubmit(event)" id="imageSubmitBtn" disabled>
+          <i class="fas fa-search"></i> Analyze Image
+        </button>
+      </div>
       
-      <div id="imageResult" class="result-box"></div>
+      <div id="imageResult" class="result-box hidden">
+        <div class="result-header">
+          <h3>Analysis Results</h3>
+          <div class="loader" id="imageLoader"></div>
+        </div>
+        <div class="result-content" id="imageResultContent"></div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h3><i class="fas fa-info-circle"></i> How It Works</h3>
+      <p>NutriNudge analyzes your meals and provides gentle suggestions for healthier alternatives based on nutritional science.</p>
+      <div class="features">
+        <div class="feature">
+          <i class="fas fa-search"></i>
+          <p>Identifies ingredients</p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-lightbulb"></i>
+          <p>Provides healthy alternatives</p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-heart"></i>
+          <p>Promotes better eating habits</p>
+        </div>
+      </div>
     </div>
   </div>
 
+  <footer class="app-footer">
+    <p>© 2025 NutriNudge | Promoting Healthier Eating Habits</p>
+  </footer>
+
   <script>
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Hide all sections and deactivate all tabs
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active-section');
+      });
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      // Show selected section and activate its tab
+      document.getElementById(tabName + 'Section').classList.add('active-section');
+      document.querySelector(`.tab-button:nth-child(${tabName === 'text' ? 1 : 2})`).classList.add('active');
+    }
+
+    // Insert example text
+    function insertExampleText() {
+      document.getElementById('user_text').value = "Grilled chicken salad with ranch dressing and croutons";
+    }
+
+    // Handle image upload preview
+    const uploadArea = document.getElementById('uploadArea');
+    const mealImageInput = document.getElementById('meal_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImage = document.getElementById('previewImage');
+    const imageSubmitBtn = document.getElementById('imageSubmitBtn');
+
+    mealImageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          previewImage.src = event.target.result;
+          uploadArea.classList.add('hidden');
+          imagePreview.classList.remove('hidden');
+          imageSubmitBtn.disabled = false;
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        mealImageInput.files = e.dataTransfer.files;
+        const event = new Event('change');
+        mealImageInput.dispatchEvent(event);
+      }
+    });
+
+    // Remove uploaded image
+    function removeImage() {
+      mealImageInput.value = '';
+      uploadArea.classList.remove('hidden');
+      imagePreview.classList.add('hidden');
+      imageSubmitBtn.disabled = true;
+    }
+
     // Handle text form submission via fetch API
     async function handleTextSubmit(event) {
-      event.preventDefault(); // prevent form from reloading page
-
-      const textInput = document.getElementById("user_text").value;
+      event.preventDefault();
+      const textInput = document.getElementById("user_text").value.trim();
       const resultDiv = document.getElementById("textResult");
-      resultDiv.innerHTML = "Analyzing...";
+      const contentDiv = document.getElementById("textResultContent");
+      const loader = document.getElementById("textLoader");
+
+      if (!textInput) {
+        contentDiv.innerHTML = '<div class="error-message">Please enter a meal description to analyze.</div>';
+        resultDiv.classList.remove('hidden');
+        return;
+      }
+
+      resultDiv.classList.remove('hidden');
+      contentDiv.innerHTML = '';
+      loader.classList.add('active');
 
       try {
         const response = await fetch("/analyze-text", {
@@ -53,31 +200,51 @@
           body: `user_text=${encodeURIComponent(textInput)}`
         });
         
+        loader.classList.remove('active');
+        
         if (!response.ok) {
           const errorData = await response.json();
-          resultDiv.innerHTML = "Error: " + (errorData.error || "Unknown error");
+          contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
           return;
         }
         
         const data = await response.json();
-        resultDiv.innerHTML = `<strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
-                               <strong>Nudges:</strong> <ul>
-                               ${data.nudges.map(n => `<li>${n}</li>`).join("")}
-                               </ul>`;
+        let nudgesHtml = data.nudges.map(n => `<li>${n}</li>`).join("");
+        
+        contentDiv.innerHTML = `
+          <div class="result-item">
+            <h4><i class="fas fa-list-ul"></i> Detected Ingredients</h4>
+            <div class="ingredients-list">${data.detected_ingredients.join(", ")}</div>
+          </div>
+          <div class="result-item">
+            <h4><i class="fas fa-magic"></i> Healthy Suggestions</h4>
+            <ul class="nudges-list">${nudgesHtml}</ul>
+          </div>
+        `;
       } catch (err) {
         console.error(err);
-        resultDiv.innerHTML = "An error occurred.";
+        loader.classList.remove('active');
+        contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your meal.</div>';
       }
-      return false; // keep page from reloading
     }
 
     // Handle image form submission via fetch API
     async function handleImageSubmit(event) {
       event.preventDefault();
-
       const fileInput = document.getElementById("meal_image");
       const resultDiv = document.getElementById("imageResult");
-      resultDiv.innerHTML = "Analyzing...";
+      const contentDiv = document.getElementById("imageResultContent");
+      const loader = document.getElementById("imageLoader");
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        contentDiv.innerHTML = '<div class="error-message">Please select an image to analyze.</div>';
+        resultDiv.classList.remove('hidden');
+        return;
+      }
+
+      resultDiv.classList.remove('hidden');
+      contentDiv.innerHTML = '';
+      loader.classList.add('active');
 
       const formData = new FormData();
       formData.append("meal_image", fileInput.files[0]);
@@ -88,23 +255,36 @@
           body: formData
         });
 
+        loader.classList.remove('active');
+        
         if (!response.ok) {
           const errorData = await response.json();
-          resultDiv.innerHTML = "Error: " + (errorData.error || "Unknown error");
+          contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
           return;
         }
 
         const data = await response.json();
-        resultDiv.innerHTML = `<strong>Meal Name:</strong> ${data.meal_name}<br/>
-                               <strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
-                               <strong>Nudges:</strong> <ul>
-                               ${data.nudges.map(n => `<li>${n}</li>`).join("")}
-                               </ul>`;
+        let nudgesHtml = data.nudges.map(n => `<li>${n}</li>`).join("");
+        
+        contentDiv.innerHTML = `
+          <div class="result-item">
+            <h4><i class="fas fa-utensils"></i> Meal Identified</h4>
+            <div class="meal-name">${data.meal_name}</div>
+          </div>
+          <div class="result-item">
+            <h4><i class="fas fa-list-ul"></i> Detected Ingredients</h4>
+            <div class="ingredients-list">${data.detected_ingredients.join(", ")}</div>
+          </div>
+          <div class="result-item">
+            <h4><i class="fas fa-magic"></i> Healthy Suggestions</h4>
+            <ul class="nudges-list">${nudgesHtml}</ul>
+          </div>
+        `;
       } catch (err) {
         console.error(err);
-        resultDiv.innerHTML = "An error occurred.";
+        loader.classList.remove('active');
+        contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your image.</div>';
       }
-      return false;
     }
   </script>
 </body>
