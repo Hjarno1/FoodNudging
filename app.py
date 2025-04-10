@@ -55,9 +55,6 @@ def analyze_text():
 
 @app.route('/analyze-image', methods=['POST'])
 def analyze_image():
-    """
-    Handle the image form submission
-    """
     if 'meal_image' not in request.files:
         return jsonify({"error": "No image file provided"}), 400
 

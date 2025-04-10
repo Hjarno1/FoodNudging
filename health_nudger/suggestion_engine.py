@@ -16,21 +16,17 @@ class SuggestionEngine:
             for row in reader:
                 ingredient = row['ingredient'].strip().lower()
                 subs[ingredient] = {
-                    'alternative': row['healthier_alternative'].strip().lower(),
-                    'reason': row['reason'],
-                    'calorie_reduction': int(row.get('calorie_reduction', 0)),
-                    'fat_reduction': int(row.get('fat_reduction', 0)),
-                    'sugar_reduction': int(row.get('sugar_reduction', 0)),
-                    'fiber_increase': int(row.get('fiber_increase', 0)),
-                    'protein_increase': int(row.get('protein_increase', 0))
+                    'alternative': row['sundere_alternativ'].strip().lower(),
+                    'reason': row['begrundelse'],
+                    'calorie_reduction': int(row.get('kalorie_reduktion', 0)),
+                    'fat_reduction': int(row.get('fedt_reduktion', 0)),
+                    'sugar_reduction': int(row.get('sukker_reduktion', 0)),
+                    'fiber_increase': int(row.get('fiber_forøgelse', 0)),
+                    'protein_increase': int(row.get('protein_forøgelse', 0))
                 }
         return subs
 
     def generate_nudges(self, ingredients: List[str], include_nutrition: bool = False) -> List[Dict]:
-        """
-        For each recognized ingredient, if there's a healthier alternative in the dictionary,
-        generate a suggestion string.
-        """
         suggestions = []
         for ingr in ingredients:
             ingr_lower = ingr.lower()
