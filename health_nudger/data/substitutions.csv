@@ -1,6 +1,59 @@
-ingredient,healthier_alternative,reason
-white bread,whole wheat bread,"higher fiber and more nutrients"
-full-fat cheese,reduced-fat cheese,"lower in total fat"
-hvidt brød,fuldkornsbrød,"højere fiber og flere næringsstoffer"
-pepperoni, kalkun pepperoni,"lavere i mættet fedt"
-mayo, græsk yoghurt,"lavere fedt og tilsat protein"
+ingrediens,sundere_alternativ,begrundelse,kalorier_reduktion,fedt_reduktion,sukker_reduktion,fiber_forøgelse,protein_forøgelse
+hvidt brød,fuldkornsbrød,"højere fiberindhold og flere næringsstoffer",10,2,1,3,1
+pepperoni,kalkunpepperoni,"mindre mættet fedt",15,5,0,0,2
+mayonnaise,græsk yoghurt,"mindre fedt og ekstra protein",20,8,3,0,4
+fuldfed ost,letost,"mindre fedtindhold",25,10,0,0,0
+hvid ris,brown ris,"højere fiber og næringsstoffer",5,0,0,2,1
+kartoffelchips,kålchips,"mindre fedt og flere næringsstoffer",50,8,0,3,1
+sodavand,kildevand med citron,"ingen sukker eller kunstige sødemidler",150,0,39,0,0
+is,frossen bananmos,"naturlig sødme med fiber",100,6,20,3,0
+smør,avocado,"sundere fedttyper og næringsstoffer",30,5,0,2,0
+flødeost,let hytteost,"højere protein og mindre fedt",40,6,0,0,5
+creme fraiche,græsk yoghurt,"højere protein og mindre fedt",30,5,0,0,4
+bacon,kanadisk bacon,"magert kød med mindre fedt",40,8,0,0,3
+hakket oksekød,hakket kalkun,"magert protein",50,10,0,0,2
+sødmælk,mandelmælk (usødet),"færre kalorier og mindre sukker",60,5,12,1,0
+hvedetortillas,fuldkornstortillas,"højere fiberindhold",15,1,0,3,1
+pasta,fuldkornspasta,"højere fiber og næringsstoffer",10,0,0,4,1
+hvedemel,mandelmel,"færre kulhydrater og højere protein",30,2,0,2,5
+bordsalt,havsalt eller urter,"mindre forarbejdet, flere mineraler",0,0,0,0,0
+sukker,stevia eller monk fruit,"naturlig kalorifri sødemiddel",16,0,4,0,0
+chokoladechips,cacaonibs,"uden tilsat sukker, antioxidanter",40,2,8,2,1
+ranchdressing,hjemmelavet græsk yoghurt dressing,"mindre fedt og højere protein",60,7,2,0,3
+fløde,skummetmælkskoncentrat,"mindre fedtindhold",50,8,0,0,0
+stegt kylling,bagt kylling,"ingen tilføjet olie, mindre fedt",100,12,0,0,0
+frossen pizza,hjemmelavet fuldkornspizza,"bedre kontrol over ingredienser",80,5,2,3,2
+granola,hjemmelavet sukkerfattig granola,"mindre forarbejdet sukker",50,2,12,2,1
+energibarer,hjemmelavet proteinbarer,"uden kunstige ingredienser",30,3,10,2,4
+frugtsaft,hel frugt,"indeholder fiber, mindre sukker",50,0,20,3,0
+konserveret frugt i sirup,frisk frugt,"uden tilsat sukker",40,0,15,2,0
+hvide kartofler,sød kartoffel,"flere næringsstoffer og fiber",5,0,0,2,0
+forarbejdet pålæg,ristet kalkunbryst,"uden tilsætningsstoffer, magert protein",30,4,0,0,3
+amerikansk ost,schweizerost,"naturlig ost med færre tilsætningsstoffer",20,3,0,0,1
+sødet yoghurt,naturlig yoghurt med frisk frugt,"uden tilsat sukker",60,0,15,1,0
+pandekagemix,havremelspandekager,"højere fiber og protein",20,1,5,2,2
+sirap,frisk frugtkompot,"naturlig sødme med fiber",80,0,20,2,0
+margarine,olivenolie,"sundere fedttyper",20,3,0,0,0
+instant havregryn,stålskåret havregryn,"mindre forarbejdet, mere fiber",10,0,5,3,1
+cornflakes,klidflager,"højere fiberindhold",5,0,2,4,1
+hvid pastasauce,hjemmelavet tomatsauce,"uden tilsat sukker eller konserveringsmidler",30,2,4,1,0
+rasp,hakkede mandler,"højere protein og sundt fedt",40,3,0,2,3
+croutoner,ristede nødder eller frø,"sundere fedttyper og protein",30,2,0,2,2
+kiks,riskiks eller grøntsagschips,"mindre fedt og færre kalorier",40,3,0,1,0
+saltstænger,ristede kikærter,"højere protein og fiber",20,1,0,3,3
+skumfiduser,frisk frugt,"naturlig sødme med næringsstoffer",60,0,15,2,0
+flødeskum,kokoscreme,"sundere fedttyper",30,2,0,0,0
+tærtebund,mandelmelstærtebund,"færre kulhydrater, højere protein",50,4,0,2,3
+kagemix,hjemmelavet fuldkornskage,"mindre forarbejdede ingredienser",40,2,10,2,1
+brownies,sort bønnepandekager,"højere protein og fiber",60,3,12,4,3
+småkager,havregryn-banankager,"uden tilsat sukker eller smør",80,5,15,2,1
+stegt fisk,bagt fisk,"ingen tilføjet olie, mindre fedt",120,10,0,0,0
+pommes frites,bagt sød kartoffel,"flere næringsstoffer, mindre fedt",80,8,0,2,0
+løgringe,bagte løgblade,"uden friturestegning",100,10,0,1,0
+milkshake,smoothie med græsk yoghurt,"højere protein, uden tilsat sukker",120,5,25,2,4
+hotdogs,kyllingepølse,"magert protein",50,8,0,0,2
+ramen nudler,zucchininudler,"færre kulhydrater, flere næringsstoffer",150,5,0,2,0
+bagel,fuldkorns engelsk muffin,"mindre portion, mere fiber",80,1,0,3,1
+croissant,fuldkornstost,"mindre smør, mere fiber",100,8,0,3,1
+donut,fuldkorns muffin,"mindre sukker, mere fiber",120,5,15,2,1
+popcorn (med smør),luftpoppet popcorn,"uden tilføjet fedt",50,6,0,1,0
