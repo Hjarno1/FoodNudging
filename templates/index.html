@@ -60,15 +60,40 @@
         }
         
         const data = await response.json();
-        resultDiv.innerHTML = `<strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
-                               <strong>Nudges:</strong> <ul>
-                               ${data.nudges.map(n => `<li>${n}</li>`).join("")}
-                               </ul>`;
+        
+        // Nutritional information and product details
+        let outputHtml = `<strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>`;
+        outputHtml += `<strong>Nudges:</strong> <ul>`;
+        data.nudges.forEach(suggestion => {
+          let productHtml = "";
+          if (suggestion.product) {
+            let nutritionHtml = "";
+            if (suggestion.product.nutrition) {
+              nutritionHtml = "<ul>" + 
+                Object.entries(suggestion.product.nutrition)
+                      .map(([nutrient, value]) => `<li>${nutrient}: ${value}</li>`)
+                      .join("") + 
+                "</ul>";
+            }
+            productHtml = `<div>
+                             <strong>Product:</strong> ${suggestion.product.name}<br/>
+                             <img src="${suggestion.product.image}" alt="${suggestion.product.name}" style="max-width:150px;"><br/>
+                             <strong>Nutritional Information:</strong> ${nutritionHtml}
+                           </div>`;
+          }
+          outputHtml += `<li>
+                           ${suggestion.suggestionText}<br/>
+                           ${productHtml}
+                         </li>`;
+        });
+        outputHtml += `</ul>`;
+        
+        resultDiv.innerHTML = outputHtml;
       } catch (err) {
         console.error(err);
         resultDiv.innerHTML = "An error occurred.";
       }
-      return false; // keep page from reloading
+      return false; // keep page from reloading! DONT REMOVE THIS LINE
     }
 
     // Handle image form submission via fetch API
@@ -94,12 +119,35 @@
           return;
         }
 
+        // Nutritional information and product details
         const data = await response.json();
-        resultDiv.innerHTML = `<strong>Meal Name:</strong> ${data.meal_name}<br/>
-                               <strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
-                               <strong>Nudges:</strong> <ul>
-                               ${data.nudges.map(n => `<li>${n}</li>`).join("")}
-                               </ul>`;
+        let outputHtml = `<strong>Meal Name:</strong> ${data.meal_name}<br/>
+                          <strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
+                          <strong>Nudges:</strong> <ul>`;
+        data.nudges.forEach(suggestion => {
+          let productHtml = "";
+          if (suggestion.product) {
+            let nutritionHtml = "";
+            if (suggestion.product.nutrition) {
+              nutritionHtml = "<ul>" + 
+                Object.entries(suggestion.product.nutrition)
+                      .map(([nutrient, value]) => `<li>${nutrient}: ${value}</li>`)
+                      .join("") +
+                "</ul>";
+            }
+            productHtml = `<div>
+                             <strong>Product:</strong> ${suggestion.product.name}<br/>
+                             <img src="${suggestion.product.image}" alt="${suggestion.product.name}" style="max-width:150px;"><br/>
+                             <strong>Nutritional Information:</strong> ${nutritionHtml}
+                           </div>`;
+          }
+          outputHtml += `<li>
+                           ${suggestion.suggestionText}<br/>
+                           ${productHtml}
+                         </li>`;
+        });
+        outputHtml += `</ul>`;
+        resultDiv.innerHTML = outputHtml;
       } catch (err) {
         console.error(err);
         resultDiv.innerHTML = "An error occurred.";

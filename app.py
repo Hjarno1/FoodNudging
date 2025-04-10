@@ -7,6 +7,7 @@ from health_nudger.ingredient_detector import TextIngredientDetector
 from health_nudger.suggestion_engine import SuggestionEngine
 from health_nudger.image_meal_classifier import ImageMealClassifier
 
+
 app = Flask(__name__, )
 
 # Setup a folder for image uploads
