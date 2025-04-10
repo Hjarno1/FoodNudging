@@ -47,9 +47,14 @@ def analyze_text():
     # Generate comprehensive feedback
     feedback = suggestion_engine.generate_feedback(ingredients, healthy_ingredients)
     
+    nudges = suggestion_engine.generate_nudges(ingredients)
+    
     response = {
         "analysis": feedback,
-        "meal_description": user_text
+        "meal_description": user_text,
+        "detected_ingredients": ingredients,
+        "nudges": nudges,
+        "healthy_ingredients": healthy_ingredients,
     }
     return jsonify(response), 200
 
@@ -74,7 +79,7 @@ def analyze_image():
     response = {
         "meal_name": meal_name,
         "detected_ingredients": ingredients,
-        "nudges": nudges
+        "nudges": nudges,
     }
     return jsonify(response), 200
 

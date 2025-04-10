@@ -200,6 +200,8 @@
         loader.classList.remove('active');
         
         if (!response.ok) {
+          print("Error: " + response.statusText);
+          print("lort")
           const errorData = await response.json();
           contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
           return;
