@@ -1,6 +1,7 @@
 # Virtual Environment
 venv/
 env/
+macvenv/
 .env/
 .venv/
 ENV/

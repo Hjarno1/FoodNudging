@@ -1,110 +1,128 @@
 import csv
 from typing import List, Dict
 
+from flask_login import current_user
+from health_nudger.open_food_facts_api import search_product, get_product_details, parse_nutrition
 from health_nudger.ingredient_detector import TextIngredientDetector
+from health_nudger.bandit import LinUCB
+import numpy as np
 
-from health_nudger.nemlig_api import search_nemlig_product, get_product_details, parse_nutrition
+from models import BanditState
 
 class SuggestionEngine:
+    """
+    Loads substitution mappings from CSV and generates a single, personalized
+    healthier‑alternative suggestion per detected ingredient using a LinUCB bandit.
+    """
     def __init__(self, substitution_file_path: str):
         self.substitution_dict = self._load_substitutions(substitution_file_path)
-        
+
     def _load_substitutions(self, file_path: str) -> Dict[str, Dict[str, str]]:
         subs = {}
         with open(file_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                ingredient = row['ingredient'].strip().lower()
-                subs[ingredient] = {
-                    'alternative': row['sundere_alternativ'].strip().lower(),
-                    'reason': row['begrundelse'],
-                    'calorie_reduction': int(row.get('kalorie_reduktion', 0)),
-                    'fat_reduction': int(row.get('fedt_reduktion', 0)),
-                    'sugar_reduction': int(row.get('sukker_reduktion', 0)),
-                    'fiber_increase': int(row.get('fiber_forøgelse', 0)),
-                    'protein_increase': int(row.get('protein_forøgelse', 0))
+                ingr = row['ingredient'].strip().lower()
+                subs[ingr] = {
+                    'alternative': row['healthier_alternative'].strip().lower(),
+                    'reason': row['reason']
                 }
         return subs
 
-    def generate_nudges(self, ingredients: List[str], include_nutrition: bool = False) -> List[Dict]:
+    def encode_questionnaire(self, q: Dict) -> np.ndarray:
+        freq_map = {'0-1': 0, '2-3': 1, '4-5': 2, '6+': 3}
+        diet_options = ['none','vegetarian','vegan','pescatarian','flexitarian','other']
+        feats = []
+        #purchase frequencies
+        for key in ['Meat','Dairy','Bread','Produce']:
+            feats.append(freq_map.get(q.get(key, '0-1'), 0))
+        #sustainability importance
+        feats.append(int(q.get('Sustainability', 3)))
+        #willingness to nudge
+        for opt in ['yes_similar','yes_cost','maybe_time','no']:
+            feats.append(1 if q.get('Swap') == opt else 0)
+        #acceptable trade‑offs
+        for t in ['higher_price','different_flavor','longer_prep','different_section']:
+            feats.append(1 if q.get(t) else 0)
+        #diets
+        for dopt in diet_options:
+            feats.append(1 if q.get('Diet') == dopt else 0)
+        #household size & order frequency
+        house_map = {'1':1,'2':2,'3':3,'4+':4}
+        order_map = {'Weekly':4,'Bi‑weekly':3,'Monthly':2,'Rarely/Never':1}
+        feats.append(house_map.get(q.get('Household'), 1))
+        feats.append(order_map.get(q.get('OrderFreq'), 1))
+        return np.array(feats, dtype=float).reshape(-1,1)
+
+    def generate_nudges(self, ingredients: List[str], questionnaire: Dict) -> List[Dict]:
         suggestions = []
+        user_x   = self.encode_questionnaire(questionnaire)
+        user_dim = user_x.shape[0]
+
         for ingr in ingredients:
-            ingr_lower = ingr.lower()
-            if ingr_lower in self.substitution_dict:
-                alt = self.substitution_dict[ingr_lower]['alternative']
-                reason = self.substitution_dict[ingr_lower]['reason']
-                # Query Nemlig.com for a product matching the alternative.
-                results = search_nemlig_product(alt, take=5)
-                product_info = None
-                nutrition = None
+            ingr_key = ingr.lower()
+            if ingr_key not in self.substitution_dict:
+                suggestions.append({"ingredient": ingr, "chosen_product": None})
+                continue
 
-                if results and results.get("Products") and results["Products"].get("Products"):
-                    # Choose the first product from the results. 
-                    # TODO: Handle multiple results.
-                    product = results["Products"]["Products"][0]
-                    product_slug = product.get("Url")  # e.g., "ciabatta-5067624"
+            alt    = self.substitution_dict[ingr_key]['alternative']
+            reason = self.substitution_dict[ingr_key]['reason']
+            results = search_product(alt, page=1, page_size=5) or {}
+            prods   = results.get("products", [])[:5]
 
-                    # Fetch detailed product info.
-                    details = get_product_details(product_slug)
-                    if details:
-                        if details.get("content"):
-                            for block in details["content"]:
-                                declaration_html = block.get("DeclarationLabel", "")
-                                if "<table" in declaration_html.lower():
-                                    nutrition = parse_nutrition(declaration_html)
-                                    break
-                        if not nutrition:
-                            for block in details.get("content", []):
-                                if block.get("Declarations"):
-                                    dec = block.get("Declarations")
-                                    nutrition = {}
-                                    if dec.get("EnergyKj") or dec.get("EnergyKcal"):
-                                        energy_kj = dec.get("EnergyKj", "").strip()
-                                        energy_kcal = dec.get("EnergyKcal", "").strip()
-                                        nutrition["Energi"] = f"{energy_kj} kJ / {energy_kcal} kcal"
-                                    if dec.get("NutritionalContentFat"):
-                                        nutrition["Fedt"] = f"{dec.get('NutritionalContentFat').strip()} g"
-                                    if dec.get("SaturatedFattyAcid"):
-                                        nutrition["heraf mættede fedtsyrer"] = f"{dec.get('SaturatedFattyAcid').strip()} g"
-                                    if dec.get("NutritionalContentCarbohydrate"):
-                                        nutrition["Kulhydrat"] = f"{dec.get('NutritionalContentCarbohydrate').strip()} g"
-                                    if dec.get("Sugar"):
-                                        nutrition["heraf sukkerarter"] = f"{dec.get('Sugar').strip()} g"
-                                    if dec.get("DietaryFiber"):
-                                        nutrition["Kostfibre"] = f"{dec.get('DietaryFiber').strip()} g"
-                                    if dec.get("NutritionalContentProtein"):
-                                        nutrition["Protein"] = f"{dec.get('NutritionalContentProtein').strip()} g"
-                                    if dec.get("Salt"):
-                                        nutrition["Salt"] = f"{dec.get('Salt').strip()} g"
-                                    if nutrition:
-                                        break
-                        if not nutrition:
-                            print("No nutritional data found; using fallback text.")
-                    
-                    product_info = {
-                        "name": product.get("Name"),
-                        "id": product.get("Id"),
-                        "slug": product_slug,
-                        "image": product.get("PrimaryImage"),
-                        "nutrition": nutrition
-                    }
-                    
-                suggestion_obj = {
-                    "ingredient": ingr,
-                    "alternative": alt,
-                    "reason": reason,
-                    "suggestionText": f"Swap '{ingr}' for '{alt}' to be healthier ({reason}).",
-                    "product": product_info
-                }
-                suggestions.append(suggestion_obj)
-            else:
-                suggestions.append({
-                    "ingredient": ingr,
-                    "suggestionText": f"No healthier alternative found for {ingr}.",
-                    "product": None
+            contexts = []
+            arms     = []
+            for p in prods:
+                code    = p.get("code")
+                details = get_product_details(code)
+                eco     = details["product"].get("ecoscore_score",0) if details and details.get("product") else 0
+                x_full  = np.vstack([user_x, np.array([[eco]],dtype=float)])
+                contexts.append(x_full)
+                arms.append({
+                    "code": code,
+                    "name": p.get("product_name"),
+                    "image": p.get("image_front_url"),
+                    "nutrition": parse_nutrition(details) if details else {},
+                    "ecoscore": eco
                 })
+
+            if not contexts:
+                suggestions.append({
+                "ingredient": ingr,
+                "alternative": alt,
+                "reason": reason,
+                "chosen_product": None
+                })
+                continue
+
+            #load and init bandit for (user,ingredient)
+            state = BanditState.query.filter_by(
+                    user_id=current_user.id,
+                    ingredient=ingr_key
+                ).first()
+            if state:
+                bandit = LinUCB.from_state(state.A_matrix, state.b_vector, alpha=0.2)
+            else:
+                bandit = LinUCB(n_arms=len(contexts), d=user_dim+1, alpha=0.2)
+
+            # pick the 3 arms by UCB 
+            p_vals   = bandit.ucb_scores(contexts)
+            top_idxs = sorted(range(len(p_vals)),
+                            key=lambda i: p_vals[i],
+                            reverse=True)[:3]
+
+            chosen_products = [ arms[i] for i in top_idxs ]
+
+            suggestions.append({
+                "ingredient":      ingr,
+                "alternative":     alt,
+                "reason":          reason,
+                "chosen_products": chosen_products
+            })
+
         return suggestions
 
+    
     def get_detailed_substitutions(self, ingredients: List[str]) -> List[Dict]:
         detailed_subs = []
         for ingr in ingredients:
@@ -119,7 +137,7 @@ class SuggestionEngine:
         nudges = self.generate_nudges(ingredients, include_nutrition=True)
         praises = []
         for ingr in healthy_ingredients:
-            praise = f"Great choice with {ingr}! {TextIngredientDetector.HEALTHY_STARS.get(ingr, '')}"
+            praise = f"Great choice with {ingr}!"
             praises.append(praise)
         assessment = self._generate_assessment(len(nudges), len(ingredients), len(praises))
         

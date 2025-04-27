@@ -10,6 +10,16 @@
 </head>
 <body>
   <div class="container">
+    {% if current_user.is_authenticated %}
+    <div class="user-nav">
+      <i class="fas fa-user-circle"></i>
+      <span class="user-email">{{ current_user.email }}</span>
+      <a class="btn-nav" href="http://127.0.0.1:5000/profile">Profile</a>
+      <a class="btn-nav" href="http://127.0.0.1:5000/logout">Logout</a>
+    </div>
+    {% endif %}
+  </div>
+  <div class="container">
     <header class="app-header">
       <div class="logo-container">
         <i class="fas fa-carrot logo-icon"></i>
@@ -101,6 +111,30 @@
 
 
   <script>
+  function bindChoiceButtons(container) {
+    container.querySelectorAll('.choose-arm-btn').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        const { ingredient, productCode, ecoscore } = btn.dataset;
+        try {
+          let resp = await fetch('/record-choice', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              ingredient:   ingredient,
+              product_code: productCode,
+              ecoscore:     ecoscore
+            })
+          });
+          if (!resp.ok) throw new Error(await resp.text());
+          alert('Choice saved!');
+        } catch(err) {
+          console.error(err);
+          alert('Failed to save choice');
+        }
+      });
+    });
+  }
+
     // Tab switching functionality
     function switchTab(tabName) {
       // Hide all sections and deactivate all tabs
@@ -201,30 +235,58 @@
         
         if (!response.ok) {
           print("Error: " + response.statusText);
-          print("lort")
           const errorData = await response.json();
           contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
           return;
         }
         
         const data = await response.json();
-        let nudgesHtml = data.nudges.map(n => `<li>${n}</li>`).join("");
-        
+        const { suggestions } = data; 
+
+        let suggestionsHtml = data.suggestions.map(s => {
+          let intro = `<strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}`
+
+          let prodItems = s.chosen_products.map(p => `
+            <li>
+              <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
+              ${p.name} (eco: ${p.ecoscore})
+              <button
+                class="choose-arm-btn"
+                data-ingredient="${s.ingredient}"
+                data-product-code="${p.code}"
+                data-ecoscore="${p.ecoscore}"
+              >Pick this</button>
+            </li>
+          `).join("");
+
+          return `<li>
+            ${intro}
+            <ul class="three-arms-list">
+              ${prodItems}
+            </ul>
+          </li>`;
+        }).join("");
+
+
         contentDiv.innerHTML = `
           <div class="result-item">
-            <h4><i class="fas fa-list-ul"></i> Detected Ingredients</h4>
-            <div class="ingredients-list">${data.detected_ingredients.join(", ")}</div>
+            <h4>Detected Ingredients</h4>
+            <div>${data.detected_ingredients.join(", ")}</div>
           </div>
           <div class="result-item">
-            <h4><i class="fas fa-magic"></i> Healthy Suggestions</h4>
-            <ul class="nudges-list">${nudgesHtml}</ul>
+            <h4>Healthy Suggestions</h4>
+            <ul class="nudges-list">
+              ${suggestionsHtml}
+            </ul>
           </div>
         `;
-        
+        bindChoiceButtons(contentDiv);
+
+
         // Nutritional information and product details
         let outputHtml = `<strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>`;
         outputHtml += `<strong>Nudges:</strong> <ul>`;
-        data.nudges.forEach(suggestion => {
+        data.suggestions.forEach(suggestion => {
           let productHtml = "";
           if (suggestion.product) {
             let nutritionHtml = "";
@@ -257,92 +319,106 @@
       return false; // keep page from reloading! DONT REMOVE THIS LINE
     }
 
-    // Handle image form submission via fetch API
     async function handleImageSubmit(event) {
-      event.preventDefault();
-      const fileInput = document.getElementById("meal_image");
-      const resultDiv = document.getElementById("imageResult");
-      const contentDiv = document.getElementById("imageResultContent");
-      const loader = document.getElementById("imageLoader");
+  event.preventDefault();
 
-      if (!fileInput.files || fileInput.files.length === 0) {
-        contentDiv.innerHTML = '<div class="error-message">Please select an image to analyze.</div>';
-        resultDiv.classList.remove('hidden');
-        return;
-      }
+  const fileInput  = document.getElementById("meal_image");
+  const resultDiv  = document.getElementById("imageResult");
+  const contentDiv = document.getElementById("imageResultContent");
+  const loader     = document.getElementById("imageLoader");
 
-      resultDiv.classList.remove('hidden');
-      contentDiv.innerHTML = '';
-      loader.classList.add('active');
+  if (!fileInput.files.length) {
+    contentDiv.innerHTML = `<div class="error-message">Please select an image to analyze.</div>`;
+    resultDiv.classList.remove('hidden');
+    return;
+  }
 
-      const formData = new FormData();
-      formData.append("meal_image", fileInput.files[0]);
+  resultDiv.classList.remove('hidden');
+  contentDiv.innerHTML = '';
+  loader.classList.add('active');
+
+  const formData = new FormData();
+  formData.append("meal_image", fileInput.files[0]);
+
+  try {
+    const response = await fetch("/analyze-image", {
+      method: "POST",
+      body: formData
+    });
+
+    loader.classList.remove('active');
+
+    if (!response.ok) {
+      const raw = await response.text();
+      let errText;
 
       try {
-        const response = await fetch("/analyze-image", {
-          method: "POST",
-          body: formData
-        });
-
-        loader.classList.remove('active');
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
-          return;
-        }
-
-        // Nutritional information and product details
-        const data = await response.json();
-        let nudgesHtml = data.nudges.map(n => `<li>${n}</li>`).join("");
-        
-        contentDiv.innerHTML = `
-          <div class="result-item">
-            <h4><i class="fas fa-utensils"></i> Meal Identified</h4>
-            <div class="meal-name">${data.meal_name}</div>
-          </div>
-          <div class="result-item">
-            <h4><i class="fas fa-list-ul"></i> Detected Ingredients</h4>
-            <div class="ingredients-list">${data.detected_ingredients.join(", ")}</div>
-          </div>
-          <div class="result-item">
-            <h4><i class="fas fa-magic"></i> Healthy Suggestions</h4>
-            <ul class="nudges-list">${nudgesHtml}</ul>
-          </div>
-        `
-        let outputHtml = `<strong>Meal Name:</strong> ${data.meal_name}<br/>
-                          <strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>
-                          <strong>Nudges:</strong> <ul>`;
-        data.nudges.forEach(suggestion => {
-          let productHtml = "";
-          if (suggestion.product) {
-            let nutritionHtml = "";
-            if (suggestion.product.nutrition) {
-              nutritionHtml = "<ul>" + 
-                Object.entries(suggestion.product.nutrition)
-                      .map(([nutrient, value]) => `<li>${nutrient}: ${value}</li>`)
-                      .join("") +
-                "</ul>";
-            }
-            productHtml = `<div>
-                             <strong>Product:</strong> ${suggestion.product.name}<br/>
-                             <img src="${suggestion.product.image}" alt="${suggestion.product.name}" style="max-width:150px;"><br/>
-                             <strong>Nutritional Information:</strong> ${nutritionHtml}
-                           </div>`;
-          }
-          outputHtml += `<li>
-                           ${suggestion.suggestionText}<br/>
-                           ${productHtml}
-                         </li>`;
-        });
-        outputHtml += `</ul>`;
-        resultDiv.innerHTML = outputHtml;
-      } catch (err) {
-        console.error(err);
-        loader.classList.remove('active');
-        contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your image.</div>';
+        const obj = JSON.parse(raw);
+        errText = obj.error || raw;
+      } catch {
+        errText = raw;
       }
+
+      contentDiv.innerHTML = `
+        <div class="error-message">
+          <strong>Error ${response.status}:</strong> ${errText}
+        </div>
+      `;
+      return;
     }
+
+    const data = await response.json();
+    const { suggestions } = data; 
+    console.log("raw suggestions:", data.suggestions);
+
+    let suggestionsHtml = data.suggestions.map(s => {
+      let intro = `<strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}`
+
+      let prodItems = s.chosen_products.map(p => `
+        <li>
+          <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
+          ${p.name} (eco: ${p.ecoscore})
+          <button
+            class="choose-arm-btn"
+            data-ingredient="${s.ingredient}"
+            data-product-code="${p.code}"
+            data-ecoscore="${p.ecoscore}"
+          >Pick this</button>
+        </li>
+      `).join("");
+
+      return `<li>
+        ${intro}
+        <ul class="three-arms-list">
+          ${prodItems}
+        </ul>
+      </li>`;
+    }).join("");
+
+
+
+    contentDiv.innerHTML = `
+      <div class="result-item">
+        <h4>Detected Ingredients</h4>
+        <div>${data.detected_ingredients.join(", ")}</div>
+      </div>
+      <div class="result-item">
+        <h4>Healthy Suggestions</h4>
+        <ul class="nudges-list">
+          ${suggestionsHtml}
+        </ul>
+      </div>
+    `;
+    bindChoiceButtons(contentDiv);
+
+
+  } catch (err) {
+    console.error("Fetch failed:", err);
+    loader.classList.remove('active');
+    contentDiv.innerHTML = `<div class="error-message">An unexpected error occurred:<br>${err.message}</div>`;
+  }
+}
+
   </script>
 </body>
 </html>

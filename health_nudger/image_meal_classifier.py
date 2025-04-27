@@ -5,11 +5,6 @@ from PIL import Image
 from typing import Tuple, List
 
 class ImageMealClassifier:
-    """
-    Example classifier using a pretrained ResNet on ImageNet.
-    This won't be as accurate on food specifically unless you fine-tune
-    on a food dataset, but demonstrates the general flow.
-    """
 
     def __init__(self):
         # 1) Load a pretrained model (ResNet18) from TorchVision
@@ -56,27 +51,16 @@ class ImageMealClassifier:
         # 4) Convert the top prediction to a “meal name”
         top1_label = self.imagenet_labels[top5_catid[0]]
         top1_prob = top5_prob[0].item()
-
-        # In a real use-case, you’d have a custom mapping from
-        # imagenet_labels -> actual meal categories or ingredients.
-        # For now, let’s just pretend that if the top label is “pizza” or “cheeseburger”, etc.
         
-        meal_name = top1_label  # e.g. "pizza"
-        
-        # As for “ingredients”, we might do something naive:
-        # For demonstration, let’s do a small mapping. 
-        # In real usage, you'd do a food-specific detection or classification pipeline.
+        meal_name = top1_label 
         
         recognized_ingredients = []
-        # Example of a naive mapping:
-        # If top1_label = "pizza", we might guess ["pepperoni", "full-fat cheese"].
-        # If top1_label = "cheeseburger", guess ["mayo", "white bread", "full-fat cheese"].
-        # Otherwise, default to something like ["lettuce", "tomato"].
+
         
         lower_label = top1_label.lower()
         if "pizza" in lower_label:
             meal_name = "Pizza"
-            recognized_ingredients = ["pepperoni", "full-fat cheese"]
+            recognized_ingredients = ["chicken", "cheese"]
         elif "burger" in lower_label or "cheeseburger" in lower_label:
             meal_name = "Cheeseburger"
             recognized_ingredients = ["white bread", "mayo", "full-fat cheese"]

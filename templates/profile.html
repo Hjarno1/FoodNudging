@@ -1,0 +1,94 @@
+<form method="post">
+    <h2>Your Preferences</h2>
+  
+    <label>Meat (0–1, 2–3, 4–5, 6+):</label>
+    <select name="meat">
+      {% for opt in ['0-1','2-3','4-5','6+'] %}
+        <option value="{{opt}}" {% if profile.meat==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <label>Dairy:</label>
+    <select name="dairy">
+      {% for opt in ['0-1','2-3','4-5','6+'] %}
+        <option value="{{opt}}" {% if profile.dairy==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <label>Bread &amp; grains:</label>
+    <select name="bread">
+      {% for opt in ['0-1','2-3','4-5','6+'] %}
+        <option value="{{opt}}" {% if profile.bread==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <label>Fresh produce:</label>
+    <select name="produce">
+      {% for opt in ['0-1','2-3','4-5','6+'] %}
+        <option value="{{opt}}" {% if profile.produce==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <label>Sustainability (1–5):</label>
+    <select name="sustainability">
+      {% for i in range(1,6) %}
+        <option value="{{i}}" {% if profile.sustainability==i %}selected{% endif %}>{{i}}</option>
+      {% endfor %}
+    </select>
+  
+    <fieldset>
+      <legend>Open to swapping?</legend>
+      {% for val,label in [
+          ('yes_similar','Yes, if taste & price similar'),
+          ('yes_cost','Yes, up to 10% more'),
+          ('maybe_time','Maybe, if prep same'),
+          ('no','No')
+        ] %}
+        <label>
+          <input type="radio" name="swap" value="{{val}}"
+            {% if profile.swap==val %}checked{% endif %}>
+          {{label}}
+        </label><br>
+      {% endfor %}
+    </fieldset>
+  
+    <fieldset>
+      <legend>Acceptable trade‑offs:</legend>
+      {% for field,label in [
+          ('higher_price','Slightly higher price'),
+          ('different_flavor','Different flavor'),
+          ('longer_prep','Longer prep'),
+          ('different_section','Shop elsewhere')
+        ] %}
+        <label>
+          <input type="checkbox" name="{{field}}"
+            {% if getattr(profile,field) %}checked{% endif %}>
+          {{label}}
+        </label><br>
+      {% endfor %}
+    </fieldset>
+  
+    <label>Diet:</label>
+    <select name="diet">
+      {% for opt in ['none','vegetarian','vegan','pescatarian','flexitarian','other'] %}
+        <option value="{{opt}}" {% if profile.diet==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <label>Household size:</label>
+    <select name="household">
+      {% for opt in ['1','2','3','4+'] %}
+        <option value="{{opt}}" {% if profile.household==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <label>Order frequency:</label>
+    <select name="orderFreq">
+      {% for opt in ['Weekly','Bi‑weekly','Monthly','Rarely/Never'] %}
+        <option value="{{opt}}" {% if profile.order_freq==opt %}selected{% endif %}>{{opt}}</option>
+      {% endfor %}
+    </select>
+  
+    <button type="submit">Save Preferences</button>
+  </form>
+  

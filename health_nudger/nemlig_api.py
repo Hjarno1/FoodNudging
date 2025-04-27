@@ -20,7 +20,7 @@ def get_product_details(product_slug):
     if response.ok:
         details = response.json()
         # Debug: print all content blocks and their keys
-        details = response.json()  # From get_product_details
+        details = response.json()
         for block in details.get("content", []):
             if block.get("TemplateName") == "productdetailspot":
                 declaration_html = block.get("DeclarationLabel")

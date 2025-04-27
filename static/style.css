@@ -416,4 +416,85 @@ input[type="file"] {
     padding: 12px 10px;
     font-size: 0.9rem;
   }
+
+.user-nav {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 5px 10px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.user-nav i.fa-user-circle {
+  font-size: 1.4rem;
+  margin-right: 8px;
+  color: #fff;
+}
+
+.user-email {
+  color: #fff;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.btn-nav {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 3px;
+  margin-left: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-nav:hover {
+  background: rgba(255,255,255,0.9);
+  color: #333;
+}
+
+.landing-content {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.landing-content h2 {
+  margin-bottom: 12px;
+  color: var(--primary-color);
+}
+
+.landing-content p {
+  color: var(--dark-gray);
+  margin-bottom: 30px;
+}
+
+.landing-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.landing-buttons .submit-button {
+  width: auto;
+  padding: 12px 30px;
+  font-size: 1rem;
+}
+
+.landing-section {
+  display: none;
+  padding: 30px;
+  border: 1px solid var(--medium-gray);
+  border-radius: 6px;
+  background: #fafafa;
+  margin-top: 20px;
+}
+
+.landing-section.active-section {
+  display: block;
+}
+
 }
