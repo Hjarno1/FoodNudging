@@ -32,7 +32,7 @@ body {
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   overflow: hidden;
-  margin-top: 20px;
+  margin-top: 40px;
   margin-bottom: 20px;
 }
 
@@ -397,104 +397,102 @@ input[type="file"] {
   display: none;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .container {
-    margin: 0;
-    border-radius: 0;
-  }
-  
-  .features {
-    flex-direction: column;
-  }
-  
-  .feature {
-    margin-bottom: 15px;
-  }
-  
-  .tab-button {
-    padding: 12px 10px;
-    font-size: 0.9rem;
-  }
+.container.profile-page {
+  position: relative;
+  padding-top: 60px;  /* make room for nav pill */
+}
 
 .user-nav {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 5px 10px;
-  border-radius: 4px;
+  top: 20px; right: 20px;
+  display: flex; align-items: center;
+  background: rgba(76,175,80,1);
+  padding: 5px 10px; border-radius: 4px;
   backdrop-filter: blur(4px);
+  z-index: 10;
 }
-
 .user-nav i.fa-user-circle {
-  font-size: 1.4rem;
-  margin-right: 8px;
-  color: #fff;
+  font-size: 1.4rem; margin-right: 8px; color: #fff;
 }
-
-.user-email {
-  color: #fff;
-  font-weight: 500;
-  margin-right: 12px;
+.user-nav .user-email {
+  color: #fff; font-weight: 500; margin-right: 12px;
 }
-
 .btn-nav {
-  color: #fff;
-  text-decoration: none;
-  font-size: 0.9rem;
-  padding: 4px 8px;
+  color: #fff; text-decoration: none;
+  font-size: 0.9rem; padding: 4px 8px;
   border: 1px solid rgba(255,255,255,0.7);
-  border-radius: 3px;
-  margin-left: 6px;
+  border-radius: 3px; margin-left: 6px;
   transition: background 0.2s, color 0.2s;
 }
-
 .btn-nav:hover {
-  background: rgba(255,255,255,0.9);
-  color: #333;
+  background: rgba(255,255,255,0.9); color: #333;
 }
 
-.landing-content {
-  text-align: center;
-  padding: 40px 20px;
+.profile-header {
+  padding: 25px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white; text-align: center;
+}
+.profile-header .logo-icon {
+  font-size: 2.5rem; margin-right: 15px;
 }
 
-.landing-content h2 {
-  margin-bottom: 12px;
-  color: var(--primary-color);
+/* ——— Landing page tweaks ——— */
+
+.landing-container {
+  padding-bottom: 40px;
 }
 
-.landing-content p {
-  color: var(--dark-gray);
-  margin-bottom: 30px;
-}
-
-.landing-buttons {
-  display: flex;
+.landing-tabs {
   justify-content: center;
-  gap: 20px;
-}
-
-.landing-buttons .submit-button {
-  width: auto;
-  padding: 12px 30px;
-  font-size: 1rem;
-}
-
-.landing-section {
-  display: none;
-  padding: 30px;
-  border: 1px solid var(--medium-gray);
-  border-radius: 6px;
-  background: #fafafa;
+  gap: 10px;
   margin-top: 20px;
 }
 
-.landing-section.active-section {
-  display: block;
+.landing-forms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
 }
 
+/* Make each form a card */
+.landing-section {
+  flex: 1 1 300px;
+  max-width: 360px;
+  background: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.landing-section:hover {
+  transform: translateY(-3px);
+}
+
+.landing-section form {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-section .input-container {
+  margin-bottom: 15px;
+}
+
+.landing-section .submit-button {
+  margin-top: 10px;
+}
+
+/* Hide inactive */
+.landing-section { display: none; }
+.landing-section.active-section { display: block; }
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 640px) {
+  .landing-forms {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

@@ -1,75 +1,49 @@
-import torch
+import os, torch
+import torch.nn as nn
 import torchvision.transforms as T
-from torchvision import models
+from torchvision.models import resnet18, ResNet18_Weights
 from PIL import Image
 from typing import Tuple, List
 
 class ImageMealClassifier:
-
     def __init__(self):
-        # 1) Load a pretrained model (ResNet18) from TorchVision
-        self.model = models.resnet18(pretrained=True)
-        self.model.eval()  # set to inference mode
+        # 1) instantiate with the new API
+        self.model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        self.model.eval()
 
-        # 2) Image preprocessing transforms
+        # 2) preprocessing (shorter side →256, center crop →224)
         self.transform = T.Compose([
-            T.Resize(256),            # resize the shorter edge to 256
-            T.CenterCrop(224),        # crop out the center 224x224
-            T.ToTensor(),             # convert PIL to PyTorch tensor
+            T.Resize(256),
+            T.CenterCrop(224),
+            T.ToTensor(),
             T.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
+              mean=[0.485,0.456,0.406],
+              std =[0.229,0.224,0.225]
             )
         ])
 
-        # 3) Load the ImageNet class names
-        with open("imagenet_classes.txt") as f:
-            self.imagenet_labels = [line.strip() for line in f.readlines()]
+        # 3) load labels from the same folder as this file
+        here = os.path.dirname(os.path.abspath(__file__))
+        labels_path = os.path.join(here, "imagenet_classes.txt")
+        with open(labels_path, "r") as f:
+            self.imagenet_labels = [l.strip() for l in f]
 
     def classify_meal_from_image(self, image_path: str) -> Tuple[str, List[str]]:
-        """
-        1. Loads and preprocesses the image.
-        2. Runs inference using a pretrained ResNet.
-        3. Returns (meal_name, ingredients_list) in the format expected by the rest of the code.
-
-        Note: Because it's still an ImageNet model, we do a best-effort guess.
-              We might do extra logic if the predicted label is something "food-like."
-        """
-
-        # 1) Load and transform the image
         img = Image.open(image_path).convert("RGB")
-        input_tensor = self.transform(img).unsqueeze(0)  # shape: [1, 3, 224, 224]
-
-        # 2) Forward pass through the model
+        inp = self.transform(img).unsqueeze(0)
         with torch.no_grad():
-            outputs = self.model(input_tensor)  # shape: [1, 1000]
-        
-        # 3) Get the top 5 predictions
-        probabilities = torch.nn.functional.softmax(outputs[0], dim=0)
-        top5_prob, top5_catid = torch.topk(probabilities, 5)
+            outputs = self.model(inp)
+        probs = torch.nn.functional.softmax(outputs[0], dim=0)
+        # pick top‐1
+        top1_prob, top1_idx = torch.max(probs, 0)
+        label = self.imagenet_labels[top1_idx]
+        low = label.lower()
 
-        # 4) Convert the top prediction to a “meal name”
-        top1_label = self.imagenet_labels[top5_catid[0]]
-        top1_prob = top5_prob[0].item()
-        
-        meal_name = top1_label 
-        
-        recognized_ingredients = []
-
-        
-        lower_label = top1_label.lower()
-        if "pizza" in lower_label:
-            meal_name = "Pizza"
-            recognized_ingredients = ["chicken", "cheese"]
-        elif "burger" in lower_label or "cheeseburger" in lower_label:
-            meal_name = "Cheeseburger"
-            recognized_ingredients = ["white bread", "mayo", "full-fat cheese"]
-        elif "sandwich" in lower_label:
-            meal_name = "Sandwich"
-            recognized_ingredients = ["white bread", "mayo"]
+        # 4) map to a “meal name” + ingredient list
+        if "pizza" in low:
+            return "Pizza", ["cheese", "tomato sauce", "flour"]
+        elif "burger" in low:
+            return "Burger", ["beef patty", "bun", "lettuce"]
+        # … your other heuristics …
         else:
-            # fallback
-            meal_name = top1_label
-            recognized_ingredients = ["lettuce", "tomato"]
-
-        return meal_name, recognized_ingredients
+            return label, ["lettuce", "tomato"]

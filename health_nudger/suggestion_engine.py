@@ -62,7 +62,7 @@ class SuggestionEngine:
         for ingr in ingredients:
             ingr_key = ingr.lower()
             if ingr_key not in self.substitution_dict:
-                suggestions.append({"ingredient": ingr, "chosen_product": None})
+                suggestions.append({"ingredient": ingr, "chosen_products": []})
                 continue
 
             alt    = self.substitution_dict[ingr_key]['alternative']
@@ -91,19 +91,20 @@ class SuggestionEngine:
                 "ingredient": ingr,
                 "alternative": alt,
                 "reason": reason,
-                "chosen_product": None
+                "chosen_products": []
                 })
                 continue
 
-            #load and init bandit for (user,ingredient)
-            state = BanditState.query.filter_by(
-                    user_id=current_user.id,
-                    ingredient=ingr_key
-                ).first()
+            #load and init bandit
+            state = BanditState.query.filter_by(ingredient=ingr_key).first()
             if state:
                 bandit = LinUCB.from_state(state.A_matrix, state.b_vector, alpha=0.2)
             else:
                 bandit = LinUCB(n_arms=len(contexts), d=user_dim+1, alpha=0.2)
+                state = BanditState(ingredient=ingr_key,
+                                    A_matrix=bandit.A,
+                                    b_vector=bandit.b_vector)
+
 
             # pick the 3 arms by UCB 
             p_vals   = bandit.ucb_scores(contexts)

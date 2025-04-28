@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body>
-  <div class="container">
+  <div class="container landing-container">
     <header class="app-header">
       <div class="logo-container">
         <i class="fas fa-carrot logo-icon"></i>
@@ -25,7 +25,7 @@
     </header>
 
     <!-- Tabs for Login / Register -->
-    <div class="tabs" style="margin-top:20px">
+    <div class="tabs landing-tabs">
       <button class="tab-button active" onclick="switchLandingTab('login')">
         <i class="fas fa-sign-in-alt"></i> Login
       </button>
@@ -34,55 +34,53 @@
       </button>
     </div>
 
-    <!-- Login Form -->
-    <div id="loginSection" class="landing-section active-section">
-      <form action="{{ url_for('login') }}" method="post">
-        <div class="input-container">
-          <label for="login_email">Email</label>
-          <input id="login_email" name="email" type="email" required />
-        </div>
-        <div class="input-container">
-          <label for="login_password">Password</label>
-          <input id="login_password" name="password" type="password" required />
-        </div>
-        <button class="submit-button" type="submit">
-          <i class="fas fa-sign-in-alt"></i> Login
-        </button>
-      </form>
-    </div>
+    <!-- Forms laid out responsively -->
+    <div class="landing-forms">
+      <!-- Login Form -->
+      <div id="loginSection" class="landing-section active-section">
+        <form action="{{ url_for('login') }}" method="post">
+          <div class="input-container">
+            <label for="login_email">Email</label>
+            <input id="login_email" name="email" type="email" required />
+          </div>
+          <div class="input-container">
+            <label for="login_password">Password</label>
+            <input id="login_password" name="password" type="password" required />
+          </div>
+          <button class="submit-button" type="submit">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </form>
+      </div>
 
-    <!-- Register Form -->
-    <div id="registerSection" class="landing-section">
-      <form action="{{ url_for('register') }}" method="post">
-        <div class="input-container">
-          <label for="reg_email">Email</label>
-          <input id="reg_email" name="email" type="email" required />
-        </div>
-        <div class="input-container">
-          <label for="reg_password">Password</label>
-          <input id="reg_password" name="password" type="password" required />
-        </div>
-        <button class="submit-button" type="submit">
-          <i class="fas fa-user-plus"></i> Register
-        </button>
-      </form>
+      <!-- Register Form -->
+      <div id="registerSection" class="landing-section">
+        <form action="{{ url_for('register') }}" method="post">
+          <div class="input-container">
+            <label for="reg_email">Email</label>
+            <input id="reg_email" name="email" type="email" required />
+          </div>
+          <div class="input-container">
+            <label for="reg_password">Password</label>
+            <input id="reg_password" name="password" type="password" required />
+          </div>
+          <button class="submit-button" type="submit">
+            <i class="fas fa-user-plus"></i> Register
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 
   <script>
     function switchLandingTab(tabName) {
-      // Hide both sections & deactivate tabs
-      document.querySelectorAll('.landing-section').forEach(s => {
-        s.classList.remove('active-section');
-      });
-      document.querySelectorAll('.tab-button').forEach(b => {
-        b.classList.remove('active');
-      });
-      // Activate the chosen
+      // Hide both and deactivate tabs
+      document.querySelectorAll('.landing-section').forEach(s => s.classList.remove('active-section'));
+      document.querySelectorAll('.landing-tabs .tab-button').forEach(b => b.classList.remove('active'));
+      // Activate selected
       document.getElementById(tabName + 'Section').classList.add('active-section');
-      document
-        .querySelector(`.tab-button[onclick="switchLandingTab('${tabName}')"]`)
-        .classList.add('active');
+      document.querySelector(`.landing-tabs .tab-button[onclick="switchLandingTab('${tabName}')"]`)
+              .classList.add('active');
     }
   </script>
 </body>

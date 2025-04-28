@@ -11,12 +11,12 @@
 <body>
   <div class="container">
     {% if current_user.is_authenticated %}
-    <div class="user-nav">
-      <i class="fas fa-user-circle"></i>
-      <span class="user-email">{{ current_user.email }}</span>
-      <a class="btn-nav" href="http://127.0.0.1:5000/profile">Profile</a>
-      <a class="btn-nav" href="http://127.0.0.1:5000/logout">Logout</a>
-    </div>
+      <div class="user-nav">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-email">{{ current_user.email }}</span>
+        <a class="btn-nav" href="{{ url_for('profile') }}">Profile</a>
+        <a class="btn-nav" href="{{ url_for('logout') }}">Logout</a>
+      </div>
     {% endif %}
   </div>
   <div class="container">

@@ -9,7 +9,6 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    bandit_states = db.relationship('BanditState', back_populates='user', lazy='dynamic')
     profile = db.relationship('UserPreferences', uselist=False, back_populates='user')
     choices = db.relationship('UserChoice', back_populates='user', lazy='dynamic')
 
@@ -47,8 +46,9 @@ class UserChoice(db.Model):
 class BanditState(db.Model):
     __tablename__ = 'bandit_states'
     id          = db.Column(db.Integer, primary_key=True)
-    user_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     ingredient  = db.Column(db.String, nullable=False)
     A_matrix    = db.Column(db.PickleType, nullable=False)
     b_vector    = db.Column(db.PickleType, nullable=False)
-    user = db.relationship('User', back_populates='bandit_states')
+
+    def __repr__(self):
+        return f"<BanditState ingredient={self.ingredient}>"

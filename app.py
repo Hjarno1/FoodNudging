@@ -94,7 +94,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for(''))
+    return redirect(url_for('landing'))
 
 #profile
 @app.route('/profile', methods=['GET','POST'])
@@ -127,70 +127,103 @@ def index():
 @app.route('/record-choice', methods=['POST'])
 @login_required
 def record_choice():
-    data         = request.get_json()
-    ingr         = data['ingredient']          
-    chosen_code  = data['product_code']         
-    chosen_eco   = float(data.get('ecoscore', 0))
+    data        = request.get_json()
+    ingr        = data['ingredient'].lower()
+    chosen_code = data['product_code']
 
-
-    alt = suggestion_engine.substitution_dict[ingr.lower()]['alternative']
-    results = search_product(alt, page=1, page_size=5) or {}
-    prods   = results.get("products", [])[:5]
-
-    contexts = []
-    codes    = []
-    user_x   = suggestion_engine.encode_questionnaire(
-                  { f: getattr(current_user.profile, f) for f in QUESTION_FIELDS }
-              )
+    # build contexts as before
+    user_x = suggestion_engine.encode_questionnaire(
+        { f: getattr(current_user.profile, f) for f in QUESTION_FIELDS }
+    )
+    prods = search_product(suggestion_engine.substitution_dict[ingr]['alternative'], page=1, page_size=5).get('products', [])[:5]
+    contexts, codes = [], []
     for p in prods:
-        code    = p.get("code")
-        details = get_product_details(code)
-        eco     = details["product"].get("ecoscore_score",0) if details and details.get("product") else 0
-        x_full  = np.vstack([user_x, np.array([[eco]],dtype=float)])
+        code    = p['code']
+        eco     = get_product_details(code)['product'].get('ecoscore_score', 0)
+        x_full  = np.vstack([user_x, [[eco]]])
         contexts.append(x_full)
         codes.append(code)
 
-    state = BanditState.query.filter_by(
-               user_id=current_user.id,
-               ingredient=ingr.lower()
-            ).first()
+    # Load or init global bandit state by ingredient only
+    state = BanditState.query.filter_by(ingredient=ingr).first()
     if state:
         bandit = LinUCB.from_state(state.A_matrix, state.b_vector, alpha=0.2)
     else:
         bandit = LinUCB(n_arms=len(contexts), d=user_x.shape[0]+1, alpha=0.2)
-        state  = BanditState(user_id=current_user.id, ingredient=ingr.lower())
+        state  = BanditState(ingredient=ingr, A_matrix=bandit.A, b_vector=bandit.b)
+
+    # apply update for the clicked arm
     try:
         idx = codes.index(chosen_code)
     except ValueError:
-        return jsonify({"error":"invalid product code"}), 400
+        return jsonify(error="invalid product code"), 400
 
     bandit.update(idx, contexts[idx], reward=1.0)
-
     state.A_matrix = bandit.A
     state.b_vector = bandit.b
     db.session.add(state)
     db.session.commit()
 
+
     return jsonify({"status":"ok"}), 200
 
+@app.route('/account')
+@login_required
+def account():
+    return render_template('account.html')
 
 @app.route('/analyze-text', methods=['POST'])
 @login_required
 def analyze_text():
-    user_text = request.form.get('user_text','').strip()
-    if not user_text:
-        return jsonify({"error":"No text provided"}), 400
+    user_text  = request.form.get('user_text', '').strip()
+    ingredients = text_detector.detect_ingredients_from_text(user_text)
+    suggestions = []
+    user_x      = suggestion_engine.encode_questionnaire(
+        { f: getattr(current_user.profile, f) for f in QUESTION_FIELDS }
+    )
+    user_dim = user_x.shape[0]
 
-    prefs = current_user.profile
-    questionnaire = { f: getattr(prefs, f) for f in QUESTION_FIELDS }
+    # For each detected ingredient, load global state
+    for ingr in ingredients:
+        key    = ingr.lower()
+        alt    = suggestion_engine.substitution_dict[key]['alternative']
+        results= search_product(alt, page=1, page_size=5) or {}
+        prods  = results.get('products', [])[:5]
 
-    ingredients  = text_detector.detect_ingredients_from_text(user_text)
-    suggestions  = suggestion_engine.generate_nudges(ingredients, questionnaire)
+        contexts, arms = [], []
+        for p in prods:
+            code    = p['code']
+            eco     = get_product_details(code)['product'].get('ecoscore_score', 0)
+            x_full  = np.vstack([user_x, [[eco]]])
+            contexts.append(x_full)
+            arms.append({
+                'code': code,
+                'name': p.get('product_name'),
+                'image': p.get('image_front_url'),
+                'ecoscore': eco
+            })
 
-    return jsonify({
-        "detected_ingredients": ingredients,
-        "suggestions": suggestions
-    }), 200
+        # shared bandit lookup
+        state = BanditState.query.filter_by(ingredient=key).first()
+        if state:
+            bandit = LinUCB.from_state(state.A_matrix, state.b_vector, alpha=0.2)
+        else:
+            bandit = LinUCB(n_arms=len(contexts), d=user_dim+1, alpha=0.2)
+            state  = BanditState(ingredient=key, A_matrix=bandit.A, b_vector=bandit.b)
+            db.session.add(state)
+
+        # score & pick top-3
+        p_vals   = bandit.ucb_scores(contexts)
+        top_idxs = sorted(range(len(p_vals)), key=lambda i: p_vals[i], reverse=True)[:3]
+        chosen   = [arms[i] for i in top_idxs]
+        suggestions.append({
+            'ingredient': ingr,
+            'alternative': alt,
+            'chosen_products': chosen
+        })
+
+    db.session.commit()
+    return jsonify(detected_ingredients=ingredients, suggestions=suggestions), 200
     
 
 @app.route('/analyze-image', methods=['POST'])
