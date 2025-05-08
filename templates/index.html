@@ -172,11 +172,14 @@ function bindChoiceButtons(container) {
                 : `<span class="product-price missing">Price N/A</span>`
               }
             </div>
+            <input type="text" placeholder="Add extra ingredients..." class="extra-input"
+                  oninput="sessionStorage.setItem('extra_${p.code}', this.value)" />
             <button
               class="choose-arm-btn"
               data-ingredient="${ingredient}"
               data-product-code="${p.code}"
               data-ecoscore="${p.ecoscore}"
+              onclick="handleProductSelection(this)"
             >Pick this</button>
           </li>
         `).join('');
@@ -355,17 +358,24 @@ function bindChoiceButtons(container) {
     }).join("");
 
     contentDiv.innerHTML = `
-      <div class="result-item">
-        <h4>Detected Ingredients</h4>
-        <div>${detected_ingredients.join(", ")}</div>
-      </div>
-      <div class="result-item">
-        <h4>Healthy Suggestions</h4>
-        <ul class="nudges-list">
-          ${suggestionsHtml}
-        </ul>
-      </div>
-    `;
+  <div class="result-item">
+    <h4>Detected Ingredients</h4>
+    <div>${data.detected_ingredients.join(", ")}</div>
+  </div>
+  <div class="result-item">
+    <h4>Healthy Suggestions</h4>
+    <ul class="nudges-list">
+      ${suggestionsHtml}
+    </ul>
+    <div class="manual-nudge-box" style="margin-top: 2em;">
+      <h4><i class="fas fa-plus-circle"></i> Add Your Own Ingredient</h4>
+      <input type="text" id="manualIngredient" placeholder="e.g. lemon, almond butter" />
+      <button onclick="handleManualIngredient()">Get Suggestions</button>
+      <ul class="nudges-list three-arms-list" id="manualSuggestions"></ul>
+    </div>
+  </div>
+`;
+
     bindChoiceButtons(contentDiv);
   } catch (err) {
     console.error(err);
@@ -462,17 +472,24 @@ function bindChoiceButtons(container) {
     }).join("");  
 
     contentDiv.innerHTML = `
-      <div class="result-item">
-        <h4>Detected Ingredients</h4>
-        <div>${data.detected_ingredients.join(", ")}</div>
-      </div>
-      <div class="result-item">
-        <h4>Healthy Suggestions</h4>
-        <ul class="nudges-list">
-          ${suggestionsHtml}
-        </ul>
-      </div>
-    `;
+  <div class="result-item">
+    <h4>Detected Ingredients</h4>
+    <div>${data.detected_ingredients.join(", ")}</div>
+  </div>
+  <div class="result-item">
+    <h4>Healthy Suggestions</h4>
+    <ul class="nudges-list">
+      ${suggestionsHtml}
+    </ul>
+    <div class="manual-nudge-box" style="margin-top: 2em;">
+      <h4><i class="fas fa-plus-circle"></i> Add Your Own Ingredient</h4>
+      <input type="text" id="manualIngredient" placeholder="e.g. lemon, almond butter" />
+      <button onclick="handleManualIngredient()">Get Suggestions</button>
+      <ul class="nudges-list three-arms-list" id="manualSuggestions"></ul>
+    </div>
+  </div>
+`;
+
     bindChoiceButtons(contentDiv);
 
 
@@ -480,6 +497,57 @@ function bindChoiceButtons(container) {
     console.error(err);
     loader.classList.remove('active');
     contentDiv.innerHTML = '<div class="error-message">An unexpected error occurred.</div>';
+  }
+}
+
+async function handleManualIngredient() {
+  const input = document.getElementById('manualIngredient');
+  const ingredient = input.value.trim();
+  const container = document.getElementById('manualSuggestions');
+
+  if (!ingredient) {
+    alert('Please enter an ingredient.');
+    return;
+  }
+
+  try {
+    const resp = await fetch('/get-products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alternative: ingredient })
+    });
+
+    if (!resp.ok) throw await resp.json();
+    const { chosen_products } = await resp.json();
+
+    const suggestionsHtml = chosen_products.map(p => `
+      <li>
+        <img src="${p.image}" alt="${p.name}" style="max-width:50px;" />
+        <div class="product-info">
+          <span class="product-name">${p.name}</span>
+          <span class="product-eco">(eco: ${p.ecoscore})</span>
+          ${p.price !== null
+            ? `<span class="product-price">– ${p.price} DKK</span>`
+            : `<span class="product-price missing">Price N/A</span>`
+          }
+        </div>
+        <input type="text" placeholder="Add extra ingredients..." class="extra-input"
+          oninput="sessionStorage.setItem('extra_${p.code}', this.value)" />
+        <button
+          class="choose-arm-btn"
+          data-ingredient="${ingredient}"
+          data-product-code="${p.code}"
+          data-ecoscore="${p.ecoscore}"
+          onclick="handleProductSelection(this)"
+        >Pick this</button>
+      </li>
+    `).join('');
+
+    container.innerHTML = suggestionsHtml;
+    bindChoiceButtons(container);
+  } catch (err) {
+    console.error(err);
+    alert('Could not fetch suggestions.');
   }
 }
 
