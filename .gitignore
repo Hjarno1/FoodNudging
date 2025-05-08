@@ -34,6 +34,10 @@ downloads/
 eggs/
 .eggs/
 
+#pics
+smaller_example_of_pictures/
+upload/
+
 # PyCharm
 .idea/
 *.iml

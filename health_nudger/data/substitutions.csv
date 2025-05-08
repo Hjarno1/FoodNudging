@@ -59,7 +59,7 @@ donut,whole wheat muffin,"less sugar, more fiber",120,5,15,2,1
 buttered popcorn,air-popped popcorn,"no added fat",50,6,0,1,0
 chicken, chicken,"chicken",0,0,0,0,0
 cheese,mozzarella,"cheese",0,0,0,0,0
-tomato sauce,tomato sauce,"tomato sauce",0,0,0,0,0
+tomato sauce,tomato sauce,"Choose tomato sauce for a boost of antioxidants like lycopene that support heart health.",0,0,0,0,0
 flour,flour,"flour",0,0,0,0,0
 cheddar, cheddar,"cheddar",0,0,0,0,0
 sugar, sugar,"sugar",0,0,0,0,0
@@ -69,3 +69,9 @@ olive oil, olive oil,"olive oil",0,0,0,0,0
 vinegar, vinegar,"vinegar",0,0,0,0,0
 apple, apple,"apple",0,0,0,0,0
 cucumber, cucumber,"cucumber",0,0,0,0,0
+white flour, wheat flour, "Choose wheat flour for more fiber and nutrients to keep your digestion smooth and energy steady.", 0, 0, 0, 0, 0
+full-fat cheese, mozzarella, "Choose mozzarella for a protein-rich option that keeps you full with less saturated fat.", 0, 0, 0, 0, 0
+chips, tortilla chips, "Choose tortilla chips for a crunchy experience with less fat and more fiber.", 0, 0, 0, 0, 0
+beef patty, minced beef, "Choose minced beef for a leaner option with less saturated fat.", 0, 0, 0, 0, 0
+mayo, mayo, "Choose mayo for a creamy texture with less fat.", 0, 0, 0, 0, 0
+burger buns, whole grain burger buns, "Choose whole grain burger buns for more fiber and nutrients to keep you full longer.", 0, 0, 0, 0, 0
