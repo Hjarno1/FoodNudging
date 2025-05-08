@@ -167,7 +167,17 @@ def record_choice():
     user_x   = suggestion_engine.encode_questionnaire(questionnaire)
     user_dim = user_x.shape[0]
 
-    # grab the 5 candidates
+    if ingr not in suggestion_engine.substitution_dict:
+        from models import UserChoice
+        choice = UserChoice(
+            user_id=current_user.id,
+            ingredient=ingr,
+            product_code=chosen_code
+        )
+        db.session.add(choice)
+        db.session.commit()
+        return jsonify(status="ok—override"), 200
+
     alt   = suggestion_engine.substitution_dict[ingr]['alternative']
     prods = suggestion_engine._get_products(alt)
 
@@ -227,7 +237,6 @@ def analyze_text():
          for front_key, model_attr in FIELD_MAP.items()
      }
     suggestions = suggestion_engine.generate_nudges(found_ingredients, questionnaire)
-    print("suggestions", suggestions)
     return jsonify(
         detected_ingredients=found_ingredients,
         healthy_ingredients=healthy_ingredients,

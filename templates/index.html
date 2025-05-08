@@ -1,556 +1,565 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BlivSund - Healthy Eating Assistant</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <div class="container">
-    {% if current_user.is_authenticated %}
-      <div class="user-nav">
-        <i class="fas fa-user-circle"></i>
-        <span class="user-email">{{ current_user.email }}</span>
-        <a class="btn-nav" href="{{ url_for('profile') }}">Profile</a>
-        <a class="btn-nav" href="{{ url_for('logout') }}">Logout</a>
-      </div>
-    {% endif %}
-  </div>
-  <div class="container">
-    <header class="app-header">
-      <div class="logo-container">
-        <i class="fas fa-carrot logo-icon"></i>
-        <h1>BlivSund</h1>
-      </div>
-      <p class="tagline">Your personal healthy eating assistant</p>
-    </header>
-    
-    <div class="tabs">
-      <button class="tab-button active" onclick="switchTab('text')">
-        <i class="fas fa-keyboard"></i> Text Analysis
-      </button>
-      <button class="tab-button" onclick="switchTab('image')">
-        <i class="fas fa-camera"></i> Image Analysis
-      </button>
-    </div>
-    
-    <!-- Section for Text Input -->
-    <div id="textSection" class="section active-section">
-      <div class="input-container">
-        <label for="user_text">Describe your meal:</label>
-        <textarea id="user_text" name="user_text" rows="5"
-          placeholder="E.g. A sandwich with white bread, mayo, and processed ham with a side of potato chips"></textarea>
-        <div class="example-text" onclick="insertExampleText()">
-          <i class="fas fa-lightbulb"></i> Example: "Grilled chicken salad with ranch dressing and croutons"
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlivSund - Healthy Eating Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="container">
+      {% if current_user.is_authenticated %}
+        <div class="user-nav">
+          <i class="fas fa-user-circle"></i>
+          <span class="user-email">{{ current_user.email }}</span>
+          <a class="btn-nav" href="{{ url_for('profile') }}">Profile</a>
+          <a class="btn-nav" href="{{ url_for('logout') }}">Logout</a>
         </div>
-        <button class="submit-button" type="button" onclick="handleTextSubmit(event)">
-          <i class="fas fa-search"></i> Analyze Meal
+      {% endif %}
+    </div>
+    <div class="container">
+      <header class="app-header">
+        <div class="logo-container">
+          <i class="fas fa-carrot logo-icon"></i>
+          <h1>BlivSund</h1>
+        </div>
+        <p class="tagline">Your personal healthy eating assistant</p>
+      </header>
+      
+      <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('text')">
+          <i class="fas fa-keyboard"></i> Text Analysis
+        </button>
+        <button class="tab-button" onclick="switchTab('image')">
+          <i class="fas fa-camera"></i> Image Analysis
         </button>
       </div>
       
-      <div id="textResult" class="result-box hidden">
-        <div class="result-header">
-          <h3>Analysis Results</h3>
-          <div class="loader" id="textLoader"></div>
-        </div>
-        <div class="result-content" id="textResultContent"></div>
-      </div>
-    </div>
-
-    <!-- Section for Image Upload -->
-    <div id="imageSection" class="section">
-      <div class="input-container">
-        <label for="meal_image">Upload a photo of your meal:</label>
-        <div class="upload-area" id="uploadArea">
-          <i class="fas fa-cloud-upload-alt upload-icon"></i>
-          <p>Drag & drop your image here or click to browse</p>
-          <input type="file" id="meal_image" name="meal_image" accept="image/*">
-        </div>
-        <div class="image-preview hidden" id="imagePreview">
-          <img id="previewImage" src="#" alt="Preview">
-          <button class="remove-image" onclick="removeImage()">
-            <i class="fas fa-times"></i>
+      <!-- Section for Text Input -->
+      <div id="textSection" class="section active-section">
+        <div class="input-container">
+          <label for="user_text">Describe your meal:</label>
+          <textarea id="user_text" name="user_text" rows="5"
+            placeholder="E.g. A sandwich with white bread, mayo, and processed ham with a side of potato chips"></textarea>
+          <div class="example-text" onclick="insertExampleText()">
+            <i class="fas fa-lightbulb"></i> Example: "Grilled chicken salad with ranch dressing and croutons"
+          </div>
+          <button class="submit-button" type="button" onclick="handleTextSubmit(event)">
+            <i class="fas fa-search"></i> Analyze Meal
           </button>
         </div>
-        <button class="submit-button" type="button" onclick="handleImageSubmit(event)" id="imageSubmitBtn" disabled>
-          <i class="fas fa-search"></i> Analyze Image
-        </button>
-      </div>
-      
-      <div id="imageResult" class="result-box hidden">
-        <div class="result-header">
-          <h3>Analysis Results</h3>
-          <div class="loader" id="imageLoader"></div>
+        
+        <div id="textResult" class="result-box hidden">
+          <div class="result-header">
+            <h3>Analysis Results</h3>
+            <div class="loader" id="textLoader"></div>
+          </div>
+          <div class="result-content" id="textResultContent"></div>
         </div>
-        <div class="result-content" id="imageResultContent"></div>
+      </div>
+
+      <!-- Section for Image Upload -->
+      <div id="imageSection" class="section">
+        <div class="input-container">
+          <label for="meal_image">Upload a photo of your meal:</label>
+          <div class="upload-area" id="uploadArea">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+            <p>Drag & drop your image here or click to browse</p>
+            <input type="file" id="meal_image" name="meal_image" accept="image/*">
+          </div>
+          <div class="image-preview hidden" id="imagePreview">
+            <img id="previewImage" src="#" alt="Preview">
+            <button class="remove-image" onclick="removeImage()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <button class="submit-button" type="button" onclick="handleImageSubmit(event)" id="imageSubmitBtn" disabled>
+            <i class="fas fa-search"></i> Analyze Image
+          </button>
+        </div>
+        
+        <div id="imageResult" class="result-box hidden">
+          <div class="result-header">
+            <h3>Analysis Results</h3>
+            <div class="loader" id="imageLoader"></div>
+          </div>
+          <div class="result-content" id="imageResultContent"></div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3><i class="fas fa-info-circle"></i> How It Works</h3>
+        <p>BlivSund analyzes your meals and provides gentle suggestions for healthier alternatives based on nutritional science.</p>
+        <div class="features">
+          <div class="feature">
+            <i class="fas fa-search"></i>
+            <p>Identifies ingredients</p>
+          </div>
+          <div class="feature">
+            <i class="fas fa-lightbulb"></i>
+            <p>Provides healthy alternatives</p>
+          </div>
+          <div class="feature">
+            <i class="fas fa-heart"></i>
+            <p>Promotes better eating habits</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="info-section">
-      <h3><i class="fas fa-info-circle"></i> How It Works</h3>
-      <p>BlivSund analyzes your meals and provides gentle suggestions for healthier alternatives based on nutritional science.</p>
-      <div class="features">
-        <div class="feature">
-          <i class="fas fa-search"></i>
-          <p>Identifies ingredients</p>
-        </div>
-        <div class="feature">
-          <i class="fas fa-lightbulb"></i>
-          <p>Provides healthy alternatives</p>
-        </div>
-        <div class="feature">
-          <i class="fas fa-heart"></i>
-          <p>Promotes better eating habits</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-
-  <script>
-function bindChoiceButtons(container) {
-  // existing "Pick this" handlers
+    <script>
+  function bindChoiceButtons(container) {
   container.querySelectorAll('.choose-arm-btn').forEach(btn => {
-    btn.addEventListener('click', async e => {
-      const { ingredient, productCode, ecoscore } = btn.dataset;
-      try {
-        let resp = await fetch('/record-choice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ingredient:   ingredient,
-            product_code: productCode,
-            ecoscore:     ecoscore
-          })
-        });
-        if (!resp.ok) throw new Error(await resp.text());
-        alert('Choice saved!');
-      } catch(err) {
-        console.error(err);
-        alert('Failed to save choice');
-      }
-    });
-  });
+  btn.addEventListener('click', () => handleProductSelection(btn));
+});
 
-  // new "Submit your own" handlers
-  container.querySelectorAll('.choose-other-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const ingredient  = btn.dataset.ingredient;
-      const inputField  = btn.parentElement.querySelector('.override-input');
-      const alternative = inputField.value.trim();
-      if (!alternative) {
-        alert('Please type a substitute');
+
+    // new "Submit your own" handlers
+    container.querySelectorAll('.choose-other-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const ingredient  = btn.dataset.ingredient;
+        const inputField  = btn.parentElement.querySelector('.override-input');
+        const alternative = inputField.value.trim();
+        if (!alternative) {
+          alert('Please type a substitute');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
+
+        try {
+          const resp = await fetch('/get-products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ alternative })
+          });
+          if (!resp.ok) throw await resp.json();
+
+          const { chosen_products } = await resp.json();
+
+          // render those three arms in place of the override <li>
+          const ul = btn.closest('.three-arms-list');
+          ul.innerHTML = chosen_products.map(p => `
+            <li>
+              <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
+              <div class="product-info">
+                <span class="product-name">${p.name}</span>
+                <span class="product-eco">(eco: ${p.ecoscore})</span>
+                ${p.price !== null
+                  ? `<span class="product-price">– ${p.price} DKK</span>`
+                  : `<span class="product-price missing">Price N/A</span>`
+                }
+              </div>
+              <input type="text" placeholder="Add extra ingredients..." class="extra-input"
+                    oninput="sessionStorage.setItem('extra_${p.code}', this.value)" />
+              <button
+                class="choose-arm-btn"
+                data-ingredient="${ingredient}"
+                data-product-code="${p.code}"
+                data-ecoscore="${p.ecoscore}"
+                onclick="handleProductSelection(this)"
+              >Pick this</button>
+            </li>
+          `).join('');
+
+          // re-bind “Pick this” buttons in that list
+          bindChoiceButtons(ul);
+
+        } catch (err) {
+          console.error(err);
+          alert('Could not fetch products. Try again.');
+        } finally {
+          // restore button in case of error
+          btn.disabled = false;
+          btn.textContent = 'Submit';
+        }
+      });
+    });
+  }
+
+
+      // Tab switching functionality
+      function switchTab(tabName) {
+        // Hide all sections and deactivate all tabs
+        document.querySelectorAll('.section').forEach(section => {
+          section.classList.remove('active-section');
+        });
+        document.querySelectorAll('.tab-button').forEach(button => {
+          button.classList.remove('active');
+        });
+        
+        // Show selected section and activate its tab
+        document.getElementById(tabName + 'Section').classList.add('active-section');
+        document.querySelector(`.tab-button:nth-child(${tabName === 'text' ? 1 : 2})`).classList.add('active');
+      }
+
+      // Insert example text
+      function insertExampleText() {
+        document.getElementById('user_text').value = "Grilled chicken salad with ranch dressing and croutons";
+      }
+
+      // Handle image upload preview
+      const uploadArea = document.getElementById('uploadArea');
+      const mealImageInput = document.getElementById('meal_image');
+      const imagePreview = document.getElementById('imagePreview');
+      const previewImage = document.getElementById('previewImage');
+      const imageSubmitBtn = document.getElementById('imageSubmitBtn');
+
+      mealImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            previewImage.src = event.target.result;
+            uploadArea.classList.add('hidden');
+            imagePreview.classList.remove('hidden');
+            imageSubmitBtn.disabled = false;
+          }
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Drag and drop functionality
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+          mealImageInput.files = e.dataTransfer.files;
+          const event = new Event('change');
+          mealImageInput.dispatchEvent(event);
+        }
+      });
+
+      // Remove uploaded image
+      function removeImage() {
+        mealImageInput.value = '';
+        uploadArea.classList.remove('hidden');
+        imagePreview.classList.add('hidden');
+        imageSubmitBtn.disabled = true;
+      }
+
+      // Handle text form submission via fetch API
+      async function handleTextSubmit(event) {
+    event.preventDefault();
+    const textInput = document.getElementById("user_text").value.trim();
+    const resultDiv = document.getElementById("textResult");
+    const contentDiv = document.getElementById("textResultContent");
+    const loader = document.getElementById("textLoader");
+
+    if (!textInput) {
+      contentDiv.innerHTML = '<div class="error-message">Please enter a meal description to analyze.</div>';
+      resultDiv.classList.remove('hidden');
+      return;
+    }
+
+    resultDiv.classList.remove('hidden');
+    contentDiv.innerHTML = '';
+    loader.classList.add('active');
+
+    try {
+      const response = await fetch("/analyze-text", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `user_text=${encodeURIComponent(textInput)}`
+      });
+
+      loader.classList.remove('active');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = 'Loading…';
+      const data = await response.json();
+      const { detected_ingredients, suggestions } = data;
 
-      try {
-        const resp = await fetch('/get-products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ alternative })
-        });
-        if (!resp.ok) throw await resp.json();
+      const suggestionsHtml = suggestions.map(s => {
+        const intro = `
+          <strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}
+        `;
 
-        const { chosen_products } = await resp.json();
-
-        // render those three arms in place of the override <li>
-        const ul = btn.closest('.three-arms-list');
-        ul.innerHTML = chosen_products.map(p => `
-          <li>
-            <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
-            <div class="product-info">
-              <span class="product-name">${p.name}</span>
-              <span class="product-eco">(eco: ${p.ecoscore})</span>
-              ${p.price !== null
-                ? `<span class="product-price">– ${p.price} DKK</span>`
-                : `<span class="product-price missing">Price N/A</span>`
-              }
+        let prodItems = s.chosen_products.map(p => `
+          <li class="product-card">
+            <img src="${p.image}" alt="${p.name}" class="product-image" />
+            <div class="product-content">
+              <div class="product-name">${p.name}</div>
+              <div class="product-meta">
+                <span class="eco-score">Eco: ${p.ecoscore}</span>
+                <span class="price">${p.price !== null ? `${p.price} DKK` : 'Price N/A'}</span>
+              </div>
+              <button
+                class="choose-arm-btn pick-button"
+                data-ingredient="${s.ingredient}"
+                data-product-code="${p.code}"
+                data-ecoscore="${p.ecoscore ?? ''}"
+              >Pick this</button>
             </div>
-            <input type="text" placeholder="Add extra ingredients..." class="extra-input"
-                  oninput="sessionStorage.setItem('extra_${p.code}', this.value)" />
+          </li>
+        `).join("");
+
+        prodItems += `
+          <li class="other-option">
+            <input
+              type="text"
+              class="override-input"
+              placeholder="Type your own substitute"
+              style="width:60%; margin-right:.5em;"
+            />
             <button
-              class="choose-arm-btn"
+              class="choose-other-btn"
+              data-ingredient="${s.ingredient}"
+            >Submit</button>
+          </li>
+        `;
+
+        return `
+          <li>
+            ${intro}
+            <ul class="three-arms-list">
+              ${prodItems}
+            </ul>
+          </li>
+        `;
+      }).join("");
+
+      contentDiv.innerHTML = `
+    <div class="result-item">
+      <h4>Detected Ingredients</h4>
+      <div>${data.detected_ingredients.join(", ")}</div>
+    </div>
+    <div class="result-item">
+      <h4>Healthy Suggestions</h4>
+      <ul class="nudges-list">
+        ${suggestionsHtml}
+      </ul>
+      <div class="manual-nudge-box" style="margin-top: 2em;">
+        <h4><i class="fas fa-plus-circle"></i> Add Your Own Ingredient</h4>
+        <input type="text" id="manualIngredient" placeholder="e.g. lemon, almond butter" />
+        <button onclick="handleManualIngredient()">Get Suggestions</button>
+        <ul class="nudges-list three-arms-list" id="manualSuggestions"></ul>
+      </div>
+    </div>
+  `;
+
+      bindChoiceButtons(contentDiv);
+    } catch (err) {
+      console.error(err);
+      loader.classList.remove('active');
+      contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your meal.</div>';
+    }
+  }
+
+      async function handleImageSubmit(event) {
+    event.preventDefault();
+
+    const fileInput  = document.getElementById("meal_image");
+    const resultDiv  = document.getElementById("imageResult");
+    const contentDiv = document.getElementById("imageResultContent");
+    const loader     = document.getElementById("imageLoader");
+
+    if (!fileInput.files.length) {
+      contentDiv.innerHTML = `<div class="error-message">Please select an image to analyze.</div>`;
+      resultDiv.classList.remove('hidden');
+      return;
+    }
+
+    resultDiv.classList.remove('hidden');
+    contentDiv.innerHTML = '';
+    loader.classList.add('active');
+
+    const formData = new FormData();
+    formData.append("meal_image", fileInput.files[0]);
+
+    try {
+      const response = await fetch("/analyze-image", {
+        method: "POST",
+        body: formData
+      });
+
+      loader.classList.remove('active');
+
+      if (!response.ok) {
+        const err = await response.json();
+        contentDiv.innerHTML = `<div class="error-message">Error: ${err.error||response.statusText}</div>`;
+        return;
+      }
+
+      const data = await response.json();
+
+      const suggestionsHtml = data.suggestions.map(s => {
+        const intro = `
+          <strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}
+        `;
+
+        let prodItems = s.chosen_products.map(p => `
+          <li class="product-card">
+            <img src="${p.image}" alt="${p.name}" class="product-image" />
+            <div class="product-content">
+              <div class="product-name">${p.name}</div>
+              <div class="product-meta">
+                <span class="eco-score">Eco: ${p.ecoscore}</span>
+                <span class="price">${p.price !== null ? `${p.price} DKK` : 'Price N/A'}</span>
+              </div>
+              <button
+                class="choose-arm-btn pick-button"
+                data-ingredient="${s.ingredient}"
+                data-product-code="${p.code}"
+                data-ecoscore="${p.ecoscore ?? ''}"
+              >Pick this</button>
+            </div>
+          </li>
+        `).join("");
+
+        prodItems += `
+          <li class="other-option">
+            <input
+              type="text"
+              class="override-input"
+              placeholder="Type your own substitute"
+              style="width:60%; margin-right:.5em;"
+            />
+            <button
+              class="choose-other-btn"
+              data-ingredient="${s.ingredient}"
+            >Submit</button>
+          </li>
+        `;
+
+        return `
+          <li>
+            ${intro}
+            <ul class="three-arms-list">
+              ${prodItems}
+            </ul>
+          </li>
+        `;
+      }).join("");  
+
+      contentDiv.innerHTML = `
+    <div class="result-item">
+      <h4>Detected Ingredients</h4>
+      <div>${data.detected_ingredients.join(", ")}</div>
+    </div>
+    <div class="result-item">
+      <h4>Healthy Suggestions</h4>
+      <ul class="nudges-list">
+        ${suggestionsHtml}
+      </ul>
+      <div class="manual-nudge-box" style="margin-top: 2em;">
+        <h4><i class="fas fa-plus-circle"></i> Add Your Own Ingredient</h4>
+        <input type="text" id="manualIngredient" placeholder="e.g. lemon, almond butter" />
+        <button onclick="handleManualIngredient()">Get Suggestions</button>
+        <ul class="nudges-list three-arms-list" id="manualSuggestions"></ul>
+      </div>
+    </div>
+  `;
+
+      bindChoiceButtons(contentDiv);
+
+
+    } catch (err) {
+      console.error(err);
+      loader.classList.remove('active');
+      contentDiv.innerHTML = '<div class="error-message">An unexpected error occurred.</div>';
+    }
+  }
+
+  async function handleManualIngredient() {
+    const input = document.getElementById('manualIngredient');
+    const ingredient = input.value.trim();
+    const container = document.getElementById('manualSuggestions');
+
+    if (!ingredient) {
+      alert('Please enter an ingredient.');
+      return;
+    }
+
+    try {
+      const resp = await fetch('/get-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alternative: ingredient })
+      });
+
+      if (!resp.ok) throw await resp.json();
+      const { chosen_products } = await resp.json();
+
+      const suggestionsHtml = chosen_products.map(p => `
+        <li class="product-card">
+          <img src="${p.image}" alt="${p.name}" class="product-image" />
+          <div class="product-content">
+            <div class="product-name">${p.name}</div>
+            <div class="product-meta">
+              <span class="eco-score">Eco: ${p.ecoscore}</span>
+              <span class="price">${p.price !== null ? `${p.price} DKK` : 'Price N/A'}</span>
+            </div>
+            <button class="choose-arm-btn pick-button"
               data-ingredient="${ingredient}"
               data-product-code="${p.code}"
               data-ecoscore="${p.ecoscore}"
-              onclick="handleProductSelection(this)"
             >Pick this</button>
-          </li>
-        `).join('');
+          </div>
+        </li>
+      `).join('');
 
-        // re-bind “Pick this” buttons in that list
-        bindChoiceButtons(ul);
+      container.innerHTML = suggestionsHtml;
+      bindChoiceButtons(container);
+    } catch (err) {
+      console.error(err);
+      alert('Could not fetch suggestions.');
+    }
+  }
 
-      } catch (err) {
-        console.error(err);
-        alert('Could not fetch products. Try again.');
-      } finally {
-        // restore button in case of error
-        btn.disabled = false;
-        btn.textContent = 'Submit';
-      }
+  function handleProductSelection(button) {
+  const selectedLi = button.closest('li');
+  const ul = selectedLi.parentElement;
+  const ingredient = button.dataset.ingredient;
+  const productCode = button.dataset.productCode;
+  const ecoscore = button.dataset.ecoscore;
+
+  fetch('/record-choice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ingredient, product_code: productCode, ecoscore })
+  })
+  .then(async resp => {
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      throw new Error(errorText || 'Failed to save choice');
+    }
+    return resp.json();
+  })
+  .then(data => {
+    // ✅ Regardless of whether it's a normal or override choice, handle the UI
+    ul.querySelectorAll('li').forEach(li => {
+      if (li !== selectedLi) li.remove();
     });
+
+    button.innerHTML = '<i class="fas fa-check" style="color: green;"></i> Added to cart';
+    button.classList.add('added-to-cart'); // Optional: use for styling
+    button.disabled = true;
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Error saving your choice: ' + err.message);
   });
 }
-
-
-    // Tab switching functionality
-    function switchTab(tabName) {
-      // Hide all sections and deactivate all tabs
-      document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active-section');
-      });
-      document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-      });
-      
-      // Show selected section and activate its tab
-      document.getElementById(tabName + 'Section').classList.add('active-section');
-      document.querySelector(`.tab-button:nth-child(${tabName === 'text' ? 1 : 2})`).classList.add('active');
-    }
-
-    // Insert example text
-    function insertExampleText() {
-      document.getElementById('user_text').value = "Grilled chicken salad with ranch dressing and croutons";
-    }
-
-    // Handle image upload preview
-    const uploadArea = document.getElementById('uploadArea');
-    const mealImageInput = document.getElementById('meal_image');
-    const imagePreview = document.getElementById('imagePreview');
-    const previewImage = document.getElementById('previewImage');
-    const imageSubmitBtn = document.getElementById('imageSubmitBtn');
-
-    mealImageInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          previewImage.src = event.target.result;
-          uploadArea.classList.add('hidden');
-          imagePreview.classList.remove('hidden');
-          imageSubmitBtn.disabled = false;
-        }
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // Drag and drop functionality
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('dragover');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.classList.remove('dragover');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('dragover');
-      if (e.dataTransfer.files.length) {
-        mealImageInput.files = e.dataTransfer.files;
-        const event = new Event('change');
-        mealImageInput.dispatchEvent(event);
-      }
-    });
-
-    // Remove uploaded image
-    function removeImage() {
-      mealImageInput.value = '';
-      uploadArea.classList.remove('hidden');
-      imagePreview.classList.add('hidden');
-      imageSubmitBtn.disabled = true;
-    }
-
-    // Handle text form submission via fetch API
-    async function handleTextSubmit(event) {
-  event.preventDefault();
-  const textInput = document.getElementById("user_text").value.trim();
-  const resultDiv = document.getElementById("textResult");
-  const contentDiv = document.getElementById("textResultContent");
-  const loader = document.getElementById("textLoader");
-
-  if (!textInput) {
-    contentDiv.innerHTML = '<div class="error-message">Please enter a meal description to analyze.</div>';
-    resultDiv.classList.remove('hidden');
-    return;
-  }
-
-  resultDiv.classList.remove('hidden');
-  contentDiv.innerHTML = '';
-  loader.classList.add('active');
-
-  try {
-    const response = await fetch("/analyze-text", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: `user_text=${encodeURIComponent(textInput)}`
-    });
-
-    loader.classList.remove('active');
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
-      return;
-    }
-
-    const data = await response.json();
-    const { detected_ingredients, suggestions } = data;
-
-    const suggestionsHtml = suggestions.map(s => {
-      const intro = `
-        <strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}
-      `;
-
-      let prodItems = s.chosen_products.map(p => `
-        <li>
-          <img src="${p.image || '/static/default-image.png'}" alt="${p.name}" style="max-width:50px;" />
-          <div class="product-info">
-            <span class="product-name">${p.name}</span>
-            <span class="product-eco">(eco: ${p.ecoscore})</span>
-            ${p.price !== null
-              ? `<span class="product-price">– ${p.price} DKK</span>`
-              : `<span class="product-price missing">Price N/A</span>`
-            }
-          </div>
-          <button
-            class="choose-arm-btn"
-            data-ingredient="${s.ingredient}"
-            data-product-code="${p.code}"
-            data-ecoscore="${p.ecoscore}"
-          >Pick this</button>
-        </li>
-      `).join("");
-
-      prodItems += `
-        <li class="other-option">
-          <input
-            type="text"
-            class="override-input"
-            placeholder="Type your own substitute"
-            style="width:60%; margin-right:.5em;"
-          />
-          <button
-            class="choose-other-btn"
-            data-ingredient="${s.ingredient}"
-          >Submit</button>
-        </li>
-      `;
-
-      return `
-        <li>
-          ${intro}
-          <ul class="three-arms-list">
-            ${prodItems}
-          </ul>
-        </li>
-      `;
-    }).join("");
-
-    contentDiv.innerHTML = `
-  <div class="result-item">
-    <h4>Detected Ingredients</h4>
-    <div>${data.detected_ingredients.join(", ")}</div>
-  </div>
-  <div class="result-item">
-    <h4>Healthy Suggestions</h4>
-    <ul class="nudges-list">
-      ${suggestionsHtml}
-    </ul>
-    <div class="manual-nudge-box" style="margin-top: 2em;">
-      <h4><i class="fas fa-plus-circle"></i> Add Your Own Ingredient</h4>
-      <input type="text" id="manualIngredient" placeholder="e.g. lemon, almond butter" />
-      <button onclick="handleManualIngredient()">Get Suggestions</button>
-      <ul class="nudges-list three-arms-list" id="manualSuggestions"></ul>
-    </div>
-  </div>
-`;
-
-    bindChoiceButtons(contentDiv);
-  } catch (err) {
-    console.error(err);
-    loader.classList.remove('active');
-    contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your meal.</div>';
-  }
-}
-
-    async function handleImageSubmit(event) {
-  event.preventDefault();
-
-  const fileInput  = document.getElementById("meal_image");
-  const resultDiv  = document.getElementById("imageResult");
-  const contentDiv = document.getElementById("imageResultContent");
-  const loader     = document.getElementById("imageLoader");
-
-  if (!fileInput.files.length) {
-    contentDiv.innerHTML = `<div class="error-message">Please select an image to analyze.</div>`;
-    resultDiv.classList.remove('hidden');
-    return;
-  }
-
-  resultDiv.classList.remove('hidden');
-  contentDiv.innerHTML = '';
-  loader.classList.add('active');
-
-  const formData = new FormData();
-  formData.append("meal_image", fileInput.files[0]);
-
-  try {
-    const response = await fetch("/analyze-image", {
-      method: "POST",
-      body: formData
-    });
-
-    loader.classList.remove('active');
-
-    if (!response.ok) {
-      const err = await response.json();
-      contentDiv.innerHTML = `<div class="error-message">Error: ${err.error||response.statusText}</div>`;
-      return;
-    }
-
-    const data = await response.json();
-
-    const suggestionsHtml = data.suggestions.map(s => {
-      const intro = `
-        <strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}
-      `;
-
-      let prodItems = s.chosen_products.map(p => `
-        <li>
-          <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
-          <div class="product-info">
-            <span class="product-name">${p.name}</span>
-            <span class="product-eco">(eco: ${p.ecoscore})</span>
-            ${p.price !== null
-              ? `<span class="product-price">– ${p.price} DKK</span>`
-              : `<span class="product-price missing">Price N/A</span>`
-            }
-          </div>
-          <button
-            class="choose-arm-btn"
-            data-ingredient="${s.ingredient}"
-            data-product-code="${p.code}"
-            data-ecoscore="${p.ecoscore}"
-          >Pick this</button>
-        </li>
-      `).join("");
-
-      prodItems += `
-        <li class="other-option">
-          <input
-            type="text"
-            class="override-input"
-            placeholder="Type your own substitute"
-            style="width:60%; margin-right:.5em;"
-          />
-          <button
-            class="choose-other-btn"
-            data-ingredient="${s.ingredient}"
-          >Submit</button>
-        </li>
-      `;
-
-      return `
-        <li>
-          ${intro}
-          <ul class="three-arms-list">
-            ${prodItems}
-          </ul>
-        </li>
-      `;
-    }).join("");  
-
-    contentDiv.innerHTML = `
-  <div class="result-item">
-    <h4>Detected Ingredients</h4>
-    <div>${data.detected_ingredients.join(", ")}</div>
-  </div>
-  <div class="result-item">
-    <h4>Healthy Suggestions</h4>
-    <ul class="nudges-list">
-      ${suggestionsHtml}
-    </ul>
-    <div class="manual-nudge-box" style="margin-top: 2em;">
-      <h4><i class="fas fa-plus-circle"></i> Add Your Own Ingredient</h4>
-      <input type="text" id="manualIngredient" placeholder="e.g. lemon, almond butter" />
-      <button onclick="handleManualIngredient()">Get Suggestions</button>
-      <ul class="nudges-list three-arms-list" id="manualSuggestions"></ul>
-    </div>
-  </div>
-`;
-
-    bindChoiceButtons(contentDiv);
-
-
-  } catch (err) {
-    console.error(err);
-    loader.classList.remove('active');
-    contentDiv.innerHTML = '<div class="error-message">An unexpected error occurred.</div>';
-  }
-}
-
-async function handleManualIngredient() {
-  const input = document.getElementById('manualIngredient');
-  const ingredient = input.value.trim();
-  const container = document.getElementById('manualSuggestions');
-
-  if (!ingredient) {
-    alert('Please enter an ingredient.');
-    return;
-  }
-
-  try {
-    const resp = await fetch('/get-products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alternative: ingredient })
-    });
-
-    if (!resp.ok) throw await resp.json();
-    const { chosen_products } = await resp.json();
-
-    const suggestionsHtml = chosen_products.map(p => `
-      <li>
-        <img src="${p.image}" alt="${p.name}" style="max-width:50px;" />
-        <div class="product-info">
-          <span class="product-name">${p.name}</span>
-          <span class="product-eco">(eco: ${p.ecoscore})</span>
-          ${p.price !== null
-            ? `<span class="product-price">– ${p.price} DKK</span>`
-            : `<span class="product-price missing">Price N/A</span>`
-          }
-        </div>
-        <input type="text" placeholder="Add extra ingredients..." class="extra-input"
-          oninput="sessionStorage.setItem('extra_${p.code}', this.value)" />
-        <button
-          class="choose-arm-btn"
-          data-ingredient="${ingredient}"
-          data-product-code="${p.code}"
-          data-ecoscore="${p.ecoscore}"
-          onclick="handleProductSelection(this)"
-        >Pick this</button>
-      </li>
-    `).join('');
-
-    container.innerHTML = suggestionsHtml;
-    bindChoiceButtons(container);
-  } catch (err) {
-    console.error(err);
-    alert('Could not fetch suggestions.');
-  }
-}
-
-  </script>
-</body>
-</html>
+    </script>
+  </body>
+  </html>

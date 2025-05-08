@@ -125,6 +125,13 @@ textarea, input[type="text"], input[type="email"], input[type="password"] {
   transition: border 0.3s;
 }
 
+.added-to-cart {
+  background-color: #d4edda;
+  border: 1px solid #28a745;
+  color: #155724;
+  font-weight: 600;
+}
+
 textarea {
   min-height: 120px;
   resize: vertical;
@@ -500,4 +507,67 @@ input[type="file"] {
 .product-price.missing {
   opacity: .6;
   font-style: italic;
+}
+
+.product-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  background-color: #fafafa;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  background-color: white;
+  border: 1px solid #ccc;
+}
+
+.product-details {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.product-meta {
+  font-size: 0.9rem;
+  color: #555;
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.eco-score {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.price {
+  font-weight: 500;
+}
+
+.pick-button {
+  background-color: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.pick-button:hover {
+  background-color: #0056b3;
 }
