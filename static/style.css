@@ -489,10 +489,15 @@ input[type="file"] {
 .landing-section { display: none; }
 .landing-section.active-section { display: block; }
 
-/* Responsive: stack on narrow screens */
-@media (max-width: 640px) {
-  .landing-forms {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.product-info {
+  display: inline-block;
+  margin-left: .5em;
+}
+.product-price {
+  margin-left: 1em;
+  font-weight: bold;
+}
+.product-price.missing {
+  opacity: .6;
+  font-style: italic;
 }

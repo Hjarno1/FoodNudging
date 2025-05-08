@@ -111,29 +111,91 @@
 
 
   <script>
-  function bindChoiceButtons(container) {
-    container.querySelectorAll('.choose-arm-btn').forEach(btn => {
-      btn.addEventListener('click', async e => {
-        const { ingredient, productCode, ecoscore } = btn.dataset;
-        try {
-          let resp = await fetch('/record-choice', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-              ingredient:   ingredient,
-              product_code: productCode,
-              ecoscore:     ecoscore
-            })
-          });
-          if (!resp.ok) throw new Error(await resp.text());
-          alert('Choice saved!');
-        } catch(err) {
-          console.error(err);
-          alert('Failed to save choice');
-        }
-      });
+function bindChoiceButtons(container) {
+  // existing "Pick this" handlers
+  container.querySelectorAll('.choose-arm-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      const { ingredient, productCode, ecoscore } = btn.dataset;
+      try {
+        let resp = await fetch('/record-choice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ingredient:   ingredient,
+            product_code: productCode,
+            ecoscore:     ecoscore
+          })
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        alert('Choice saved!');
+      } catch(err) {
+        console.error(err);
+        alert('Failed to save choice');
+      }
     });
-  }
+  });
+
+  // new "Submit your own" handlers
+  container.querySelectorAll('.choose-other-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const ingredient  = btn.dataset.ingredient;
+      const inputField  = btn.parentElement.querySelector('.override-input');
+      const alternative = inputField.value.trim();
+      if (!alternative) {
+        alert('Please type a substitute');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+
+      try {
+        const resp = await fetch('/get-products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ alternative })
+        });
+        if (!resp.ok) throw await resp.json();
+
+        const { chosen_products } = await resp.json();
+
+        // render those three arms in place of the override <li>
+        const ul = btn.closest('.three-arms-list');
+        ul.innerHTML = chosen_products.map(p => `
+          <li>
+            <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
+            <div class="product-info">
+              <span class="product-name">${p.name}</span>
+              <span class="product-eco">(eco: ${p.ecoscore})</span>
+              ${p.price !== null
+                ? `<span class="product-price">– ${p.price} DKK</span>`
+                : `<span class="product-price missing">Price N/A</span>`
+              }
+            </div>
+            <button
+              class="choose-arm-btn"
+              data-ingredient="${ingredient}"
+              data-product-code="${p.code}"
+              data-ecoscore="${p.ecoscore}"
+            >Pick this</button>
+          </li>
+        `).join('');
+
+        // re-bind “Pick this” buttons in that list
+        bindChoiceButtons(ul);
+
+      } catch (err) {
+        console.error(err);
+        alert('Could not fetch products. Try again.');
+      } finally {
+        // restore button in case of error
+        btn.disabled = false;
+        btn.textContent = 'Submit';
+      }
+    });
+  });
+}
+
 
     // Tab switching functionality
     function switchTab(tabName) {
@@ -249,7 +311,14 @@
           let prodItems = s.chosen_products.map(p => `
             <li>
               <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
-              ${p.name} (eco: ${p.ecoscore})
+              <div class="product-info">
+                <span class="product-name">${p.name}</span>
+                <span class="product-eco">(eco: ${p.ecoscore})</span>
+                ${p.price !== null
+                  ? `<span class="product-price">– ${p.price} DKK</span>`
+                  : `<span class="product-price missing">Price N/A</span>`
+                }
+              </div>
               <button
                 class="choose-arm-btn"
                 data-ingredient="${s.ingredient}"
@@ -349,35 +418,29 @@
     loader.classList.remove('active');
 
     if (!response.ok) {
-      const raw = await response.text();
-      let errText;
-
-      try {
-        const obj = JSON.parse(raw);
-        errText = obj.error || raw;
-      } catch {
-        errText = raw;
-      }
-
-      contentDiv.innerHTML = `
-        <div class="error-message">
-          <strong>Error ${response.status}:</strong> ${errText}
-        </div>
-      `;
+      const err = await response.json();
+      contentDiv.innerHTML = `<div class="error-message">Error: ${err.error||response.statusText}</div>`;
       return;
     }
 
     const data = await response.json();
-    const { suggestions } = data; 
-    console.log("raw suggestions:", data.suggestions);
 
-    let suggestionsHtml = data.suggestions.map(s => {
-      let intro = `<strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}`
+    const suggestionsHtml = data.suggestions.map(s => {
+      const intro = `
+        <strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}
+      `;
 
       let prodItems = s.chosen_products.map(p => `
         <li>
           <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
-          ${p.name} (eco: ${p.ecoscore})
+          <div class="product-info">
+            <span class="product-name">${p.name}</span>
+            <span class="product-eco">(eco: ${p.ecoscore})</span>
+            ${p.price !== null
+              ? `<span class="product-price">– ${p.price} DKK</span>`
+              : `<span class="product-price missing">Price N/A</span>`
+            }
+          </div>
           <button
             class="choose-arm-btn"
             data-ingredient="${s.ingredient}"
@@ -387,15 +450,30 @@
         </li>
       `).join("");
 
-      return `<li>
-        ${intro}
-        <ul class="three-arms-list">
-          ${prodItems}
-        </ul>
-      </li>`;
-    }).join("");
+      prodItems += `
+        <li class="other-option">
+          <input
+            type="text"
+            class="override-input"
+            placeholder="Type your own substitute"
+            style="width:60%; margin-right:.5em;"
+          />
+          <button
+            class="choose-other-btn"
+            data-ingredient="${s.ingredient}"
+          >Submit</button>
+        </li>
+      `;
 
-
+      return `
+        <li>
+          ${intro}
+          <ul class="three-arms-list">
+            ${prodItems}
+          </ul>
+        </li>
+      `;
+    }).join("");  
 
     contentDiv.innerHTML = `
       <div class="result-item">
@@ -413,9 +491,9 @@
 
 
   } catch (err) {
-    console.error("Fetch failed:", err);
+    console.error(err);
     loader.classList.remove('active');
-    contentDiv.innerHTML = `<div class="error-message">An unexpected error occurred:<br>${err.message}</div>`;
+    contentDiv.innerHTML = '<div class="error-message">An unexpected error occurred.</div>';
   }
 }
 
