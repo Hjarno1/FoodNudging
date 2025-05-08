@@ -220,17 +220,19 @@ def record_choice():
 @app.route('/analyze-text', methods=['POST'])
 @login_required
 def analyze_text():
-    user_text   = request.form.get('user_text','').strip()
-    ingredients = text_detector.detect_ingredients_from_text(user_text)
+    user_text = request.form.get('user_text', '').strip()
+    found_ingredients, healthy_ingredients = text_detector.detect_ingredients_from_text(user_text)
     questionnaire = {
-    front_key: getattr(current_user.profile, model_attr)
-    for front_key, model_attr in FIELD_MAP.items()
-    }
-    suggestions = suggestion_engine.generate_nudges(ingredients, questionnaire)
+         front_key: getattr(current_user.profile, model_attr)
+         for front_key, model_attr in FIELD_MAP.items()
+     }
+    suggestions = suggestion_engine.generate_nudges(found_ingredients, questionnaire)
+    print("suggestions", suggestions)
     return jsonify(
-        detected_ingredients=ingredients,
+        detected_ingredients=found_ingredients,
+        healthy_ingredients=healthy_ingredients,
         suggestions=suggestions
-    ),200
+    ), 200
 
 @app.route('/analyze-image', methods=['POST'])
 @login_required

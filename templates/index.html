@@ -268,125 +268,111 @@ function bindChoiceButtons(container) {
 
     // Handle text form submission via fetch API
     async function handleTextSubmit(event) {
-      event.preventDefault();
-      const textInput = document.getElementById("user_text").value.trim();
-      const resultDiv = document.getElementById("textResult");
-      const contentDiv = document.getElementById("textResultContent");
-      const loader = document.getElementById("textLoader");
+  event.preventDefault();
+  const textInput = document.getElementById("user_text").value.trim();
+  const resultDiv = document.getElementById("textResult");
+  const contentDiv = document.getElementById("textResultContent");
+  const loader = document.getElementById("textLoader");
 
-      if (!textInput) {
-        contentDiv.innerHTML = '<div class="error-message">Please enter a meal description to analyze.</div>';
-        resultDiv.classList.remove('hidden');
-        return;
-      }
+  if (!textInput) {
+    contentDiv.innerHTML = '<div class="error-message">Please enter a meal description to analyze.</div>';
+    resultDiv.classList.remove('hidden');
+    return;
+  }
 
-      resultDiv.classList.remove('hidden');
-      contentDiv.innerHTML = '';
-      loader.classList.add('active');
+  resultDiv.classList.remove('hidden');
+  contentDiv.innerHTML = '';
+  loader.classList.add('active');
 
-      try {
-        const response = await fetch("/analyze-text", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: `user_text=${encodeURIComponent(textInput)}`
-        });
-        
-        loader.classList.remove('active');
-        
-        if (!response.ok) {
-          print("Error: " + response.statusText);
-          const errorData = await response.json();
-          contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
-          return;
-        }
-        
-        const data = await response.json();
-        const { suggestions } = data; 
+  try {
+    const response = await fetch("/analyze-text", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: `user_text=${encodeURIComponent(textInput)}`
+    });
 
-        let suggestionsHtml = data.suggestions.map(s => {
-          let intro = `<strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}`
+    loader.classList.remove('active');
 
-          let prodItems = s.chosen_products.map(p => `
-            <li>
-              <img src="${p.image}" alt="${p.name}" style="max-width:50px;"/>
-              <div class="product-info">
-                <span class="product-name">${p.name}</span>
-                <span class="product-eco">(eco: ${p.ecoscore})</span>
-                ${p.price !== null
-                  ? `<span class="product-price">– ${p.price} DKK</span>`
-                  : `<span class="product-price missing">Price N/A</span>`
-                }
-              </div>
-              <button
-                class="choose-arm-btn"
-                data-ingredient="${s.ingredient}"
-                data-product-code="${p.code}"
-                data-ecoscore="${p.ecoscore}"
-              >Pick this</button>
-            </li>
-          `).join("");
-
-          return `<li>
-            ${intro}
-            <ul class="three-arms-list">
-              ${prodItems}
-            </ul>
-          </li>`;
-        }).join("");
-
-
-        contentDiv.innerHTML = `
-          <div class="result-item">
-            <h4>Detected Ingredients</h4>
-            <div>${data.detected_ingredients.join(", ")}</div>
-          </div>
-          <div class="result-item">
-            <h4>Healthy Suggestions</h4>
-            <ul class="nudges-list">
-              ${suggestionsHtml}
-            </ul>
-          </div>
-        `;
-        bindChoiceButtons(contentDiv);
-
-
-        // Nutritional information and product details
-        let outputHtml = `<strong>Detected Ingredients:</strong> ${data.detected_ingredients.join(", ")}<br/>`;
-        outputHtml += `<strong>Nudges:</strong> <ul>`;
-        data.suggestions.forEach(suggestion => {
-          let productHtml = "";
-          if (suggestion.product) {
-            let nutritionHtml = "";
-            if (suggestion.product.nutrition) {
-              nutritionHtml = "<ul>" + 
-                Object.entries(suggestion.product.nutrition)
-                      .map(([nutrient, value]) => `<li>${nutrient}: ${value}</li>`)
-                      .join("") + 
-                "</ul>";
-            }
-            productHtml = `<div>
-                             <strong>Product:</strong> ${suggestion.product.name}<br/>
-                             <img src="${suggestion.product.image}" alt="${suggestion.product.name}" style="max-width:150px;"><br/>
-                             <strong>Nutritional Information:</strong> ${nutritionHtml}
-                           </div>`;
-          }
-          outputHtml += `<li>
-                           ${suggestion.suggestionText}<br/>
-                           ${productHtml}
-                         </li>`;
-        });
-        outputHtml += `</ul>`;
-        
-        resultDiv.innerHTML = outputHtml;
-      } catch (err) {
-        console.error(err);
-        loader.classList.remove('active');
-        contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your meal.</div>';
-      }
-      return false; // keep page from reloading! DONT REMOVE THIS LINE
+    if (!response.ok) {
+      const errorData = await response.json();
+      contentDiv.innerHTML = `<div class="error-message">Error: ${errorData.error || "Unknown error"}</div>`;
+      return;
     }
+
+    const data = await response.json();
+    const { detected_ingredients, suggestions } = data;
+
+    const suggestionsHtml = suggestions.map(s => {
+      const intro = `
+        <strong>Replace ${s.ingredient} with ${s.alternative}</strong><br>${s.reason}
+      `;
+
+      let prodItems = s.chosen_products.map(p => `
+        <li>
+          <img src="${p.image || '/static/default-image.png'}" alt="${p.name}" style="max-width:50px;" />
+          <div class="product-info">
+            <span class="product-name">${p.name}</span>
+            <span class="product-eco">(eco: ${p.ecoscore})</span>
+            ${p.price !== null
+              ? `<span class="product-price">– ${p.price} DKK</span>`
+              : `<span class="product-price missing">Price N/A</span>`
+            }
+          </div>
+          <button
+            class="choose-arm-btn"
+            data-ingredient="${s.ingredient}"
+            data-product-code="${p.code}"
+            data-ecoscore="${p.ecoscore}"
+          >Pick this</button>
+        </li>
+      `).join("");
+
+      prodItems += `
+        <li class="other-option">
+          <input
+            type="text"
+            class="override-input"
+            placeholder="Type your own substitute"
+            style="width:60%; margin-right:.5em;"
+          />
+          <button
+            class="choose-other-btn"
+            data-ingredient="${s.ingredient}"
+          >Submit</button>
+        </li>
+      `;
+
+      return `
+        <li>
+          ${intro}
+          <ul class="three-arms-list">
+            ${prodItems}
+          </ul>
+        </li>
+      `;
+    }).join("");
+
+    contentDiv.innerHTML = `
+      <div class="result-item">
+        <h4>Detected Ingredients</h4>
+        <div>${detected_ingredients.join(", ")}</div>
+      </div>
+      <div class="result-item">
+        <h4>Healthy Suggestions</h4>
+        <ul class="nudges-list">
+          ${suggestionsHtml}
+        </ul>
+      </div>
+    `;
+    bindChoiceButtons(contentDiv);
+  } catch (err) {
+    console.error(err);
+    loader.classList.remove('active');
+    contentDiv.innerHTML = '<div class="error-message">An error occurred while analyzing your meal.</div>';
+  }
+}
 
     async function handleImageSubmit(event) {
   event.preventDefault();
