@@ -3,44 +3,42 @@ from typing import List, Tuple
 
 class TextIngredientDetector:
 
-    # A very simple list of known ingredients for pattern matching
+    # Expanded list of known ingredients (healthy and unhealthy)
     KNOWN_INGREDIENTS = [
-        'white bread', 'pepperoni', 'mayo', 'full-fat cheese', 
-        'lettuce', 'tomato', 'chicken', 'whole wheat bread',
-        'turkey pepperoni', 'greek yogurt', 'reduced-fat cheese'
+        # Unhealthy/common substitution targets
+        'cheese', 'flour', 'tomato sauce', 'white bread', 'pepperoni', 'mayo', 'full-fat cheese', 'ranch dressing', 
+        'croutons', 'fried chicken', 'processed lunch meat', 'flavored yogurt',
+        'table salt', 'sugar', 'chocolate chips', 'cream', 'granola', 'energy bars',
+        
+        # Healthy ingredients
+        'grilled chicken', 'baked chicken', 'roasted turkey', 'salmon', 'tuna',
+        'quinoa', 'brown rice', 'sweet potatoes', 'kale', 'spinach', 'avocado',
+        'olive oil', 'nuts', 'seeds', 'berries', 'whole wheat bread', 'greek yogurt'
+    ]
+    
+    HEALTHY_INGREDIENTS = [
+        'mozzarella', 'flour', 'tomato sauce', 'grilled chicken', 'baked chicken', 'roasted turkey', 'salmon', 'tuna',
+        'quinoa', 'brown rice', 'sweet potatoes', 'kale', 'spinach', 'avocado',
+        'olive oil', 'nuts', 'seeds', 'berries', 'whole wheat bread', 'greek yogurt'
     ]
 
-    @staticmethod
-    def detect_ingredients_from_text(text: str) -> List[str]:
+    def detect_ingredients_from_text(self, text: str) -> Tuple[List[str], List[str]]:
         text_lower = text.lower()
-        found_ingredients = []
+        found_ingredients: List[str] = []
+        healthy_ingredients: List[str] = []
         
-        # Simple approach: check if each known ingredient appears in the text
+        # Check for each known ingredient
         for ingr in TextIngredientDetector.KNOWN_INGREDIENTS:
             if ingr in text_lower:
                 found_ingredients.append(ingr)
+                if ingr in TextIngredientDetector.HEALTHY_INGREDIENTS:
+                    healthy_ingredients.append(ingr)
         
-        return found_ingredients
-
+        return found_ingredients, healthy_ingredients
 
 class ImageMealClassifier:
-    """
-    Mock class for image-based meal detection.
-    Here we will use a ML model to classify the meal type and ingredients.
-    """
 
     def classify_meal_from_image(self, image_path: str) -> Tuple[str, List[str]]:
-        """
-        Returns a mock classification (meal type, list of mock ingredients)
-        purely for demonstration.
-        """
-        # In a real scenario, you'd load the image, run it through a model like
-        # a pretrained ResNet, YOLO, etc., and detect meal type + ingredients.
-        
-        # For demonstration, let's just return a pretend result:
-        # e.g. "pizza" with "pepperoni" and "full-fat cheese"
-        # You could randomize or base it on the file name, etc.
-        # We'll do a simple example:
         if "pizza" in image_path.lower():
             return ("Pepperoni Pizza", ["pepperoni", "full-fat cheese"])
         elif "burger" in image_path.lower():

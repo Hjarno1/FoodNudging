@@ -1,6 +1,7 @@
 # Virtual Environment
 venv/
 env/
+macvenv/
 .env/
 .venv/
 ENV/
@@ -32,6 +33,10 @@ build/
 downloads/
 eggs/
 .eggs/
+
+#pics
+smaller_example_of_pictures/
+upload/
 
 # PyCharm
 .idea/

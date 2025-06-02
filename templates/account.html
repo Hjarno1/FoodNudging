@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlivSund – My Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container profile-page">
+    {% if current_user.is_authenticated %}
+    <div class="user-nav">
+      <i class="fas fa-user-circle"></i>
+      <span class="user-email">{{ current_user.email }}</span>
+      <a class="btn-nav" href="{{ url_for('account') }}">Account</a>
+      <a class="btn-nav" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+    {% endif %}
+
+    <header class="profile-header">
+      <div class="logo-container">
+        <i class="fas fa-user-circle logo-icon"></i>
+        <h1>My Account</h1>
+      </div>
+    </header>
+
+    <div class="section active-section">
+      <div class="result-box">
+        <h4><i class="fas fa-id-badge"></i> Name</h4>
+        <p>{{ current_user.name or '—' }}</p>
+
+        <h4><i class="fas fa-envelope"></i> Email</h4>
+        <p>{{ current_user.email }}</p>
+
+        <div style="margin-top:20px;">
+          <a class="submit-button" href="{{ url_for('edit_account') }}">
+            <i class="fas fa-edit"></i> Edit Info
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
